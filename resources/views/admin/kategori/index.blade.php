@@ -216,7 +216,7 @@
         setTimeout(()=>{ o.classList.add('hidden'); o.classList.remove('flex'); },200);
     }
     function openEditModal(id, nama) {
-        document.getElementById('formEdit').action=`/admin/kategori/${id}`;
+        document.getElementById('formEdit').action=`/kategori/${id}`;
         document.getElementById('editNamaKategori').value=nama;
         openModal('modalEdit');
     }
