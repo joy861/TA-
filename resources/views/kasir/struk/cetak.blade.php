@@ -190,7 +190,7 @@
     <div class="struk-header">
         <div class="brand">
             <div class="brand-logo">PH</div>
-            <div class="brand-name">Pande Hill</div>
+            <div class="brand-name">Pande Hill Garden View</div>
         </div>
         <div class="struk-title">Struk Pembayaran</div>
         <div class="struk-subtitle">Garden View Restaurant</div>
