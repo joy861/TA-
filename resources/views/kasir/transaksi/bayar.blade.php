@@ -345,7 +345,7 @@
                 <div class="payment-info-card">
                     <div class="kasir-form-label" style="margin-bottom:4px;">Tanggal</div>
                     <div class="text-base font-black" style="color:#1e3a5f;">
-                        {{ $pesanan->tanggal ?? '-' }}
+                        {{ \Carbon\Carbon::parse($pesanan->created_at)->timezone('Asia/Makassar')->format('d M Y, H:i') }}
                     </div>
                 </div>
             </div>

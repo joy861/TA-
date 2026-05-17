@@ -152,7 +152,9 @@
                 <div class="receipt-info-grid mb-5">
                     <div class="receipt-info-box">
                         <div class="receipt-label">Tanggal</div>
-                        <div class="receipt-value">{{ $pesanan->tanggal ?? '-' }}</div>
+                        <div class="receipt-value">
+    {{ \Carbon\Carbon::parse($pesanan->created_at)->timezone('Asia/Makassar')->format('d M Y, H:i') }}
+</div>
                     </div>
                     <div class="receipt-info-box">
                         <div class="receipt-label">Meja</div>

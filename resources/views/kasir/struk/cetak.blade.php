@@ -200,7 +200,7 @@
     <div class="info-block">
         <div class="info-row">
             <span class="info-label">Tanggal</span>
-            <span class="info-value">{{ $pesanan->tanggal }}</span>
+            <span class="info-value">{{ \Carbon\Carbon::parse($pesanan->created_at)->timezone('Asia/Makassar')->format('d M Y, H:i') }}</span>
         </div>
         <div class="info-row">
             <span class="info-label">Meja</span>
