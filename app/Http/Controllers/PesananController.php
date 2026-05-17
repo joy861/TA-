@@ -16,6 +16,7 @@ class PesananController extends Controller
     public function index(Request $request)
     {
         $pesanans = Pesanan::with('meja', 'user')
+            ->whereDate('created_at', today()) // ✅ tambahkan ini
             ->orderBy('created_at', 'desc')
             ->get();
 
