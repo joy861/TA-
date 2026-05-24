@@ -91,6 +91,25 @@
         letter-spacing: -1px;
     }
 
+    .receipt-breakdown-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 12px;
+        color: rgba(30,58,95,0.55);
+        font-weight: 600;
+        padding: 4px 0;
+    }
+
+    .receipt-breakdown-row.final {
+        color: #1e3a5f;
+        font-size: 13px;
+        font-weight: 800;
+        padding-top: 10px;
+        margin-top: 6px;
+        border-top: 1px dashed rgba(30,58,95,0.15);
+    }
+
     @media (max-width: 768px) {
         .receipt-info-grid { grid-template-columns: 1fr; }
         .receipt-total-value { font-size: 22px; }
@@ -102,7 +121,11 @@
         ? route('pesanan.index')
         : url('kasir/pesanan');
 
-    $total = $pesanan->total_harga ?? 0;
+    $subtotal   = $pesanan->total_harga ?? 0;
+    $metode     = $pesanan->metode_pembayaran ?? 'cash';
+    $pajak      = ($pesanan->pajak > 0) ? $pesanan->pajak : round($subtotal * 0.07);
+    $biayaCard  = ($pesanan->biaya_card > 0) ? $pesanan->biaya_card : ($metode === 'card' ? round(($subtotal + $pajak) * 0.02) : 0);
+    $totalBayar = ($pesanan->total_bayar > 0) ? $pesanan->total_bayar : ($subtotal + $pajak + $biayaCard);
 @endphp
 
 <div class="kasir-page-header">
@@ -118,8 +141,15 @@
         </a>
         <a href="{{ route('struk.cetak', $pesanan->id_pesanan) }}" target="_blank" class="kasir-btn kasir-btn-success">
             <i class="bi bi-printer"></i>
-            <span>Cetak Struk</span>
+            <span>Preview Struk</span>
         </a>
+        <form action="{{ route('struk.print', $pesanan->id_pesanan) }}" method="POST" style="margin:0;">
+            @csrf
+            <button type="submit" class="kasir-btn kasir-btn-success">
+                <i class="bi bi-printer-fill"></i>
+                <span>Cetak Struk Thermal</span>
+            </button>
+        </form>
     </div>
 </div>
 
@@ -153,8 +183,8 @@
                     <div class="receipt-info-box">
                         <div class="receipt-label">Tanggal</div>
                         <div class="receipt-value">
-    {{ \Carbon\Carbon::parse($pesanan->created_at)->timezone('Asia/Makassar')->format('d M Y, H:i') }}
-</div>
+                            {{ \Carbon\Carbon::parse($pesanan->created_at)->timezone('Asia/Makassar')->format('d M Y, H:i') }}
+                        </div>
                     </div>
                     <div class="receipt-info-box">
                         <div class="receipt-label">Meja</div>
@@ -182,7 +212,7 @@
                                     @php
                                         $harga = $d->menu->harga ?? 0;
                                         $jumlah = $d->jumlah ?? 0;
-                                        $subtotal = $d->subtotal ?? ($harga * $jumlah);
+                                        $subtotalItem = $d->subtotal ?? ($harga * $jumlah);
                                     @endphp
                                     <tr>
                                         <td class="font-bold">{{ $d->menu->nama_menu ?? '-' }}</td>
@@ -190,7 +220,7 @@
                                         <td>
                                             <span class="kasir-badge kasir-badge-info">{{ $jumlah }}x</span>
                                         </td>
-                                        <td class="font-black">Rp{{ number_format($subtotal, 0, ',', '.') }}</td>
+                                        <td class="font-black">Rp{{ number_format($subtotalItem, 0, ',', '.') }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -198,15 +228,39 @@
                     </div>
                 </div>
 
-                <div class="receipt-total-box flex items-center justify-between gap-4 flex-wrap">
-                    <div>
-                        <div class="receipt-total-label">Total Pembayaran</div>
-                        <div class="text-xs mt-1" style="color:rgba(30,58,95,0.5);">Total akhir pesanan pelanggan</div>
+                <div class="receipt-total-box">
+                    <div class="flex items-start justify-between gap-4 flex-wrap">
+                        <div>
+                            <div class="receipt-total-label">Total Pembayaran</div>
+                            <div class="text-xs mt-1" style="color:rgba(30,58,95,0.5);">Total akhir pesanan pelanggan</div>
+                        </div>
+                        <div class="receipt-total-value">
+                            <span style="font-size:13px; font-weight:700; color:rgba(30,58,95,0.5); margin-right:3px;">Rp</span>{{ number_format($totalBayar, 0, ',', '.') }}
+                        </div>
                     </div>
-                    <div class="receipt-total-value">
-                        <span style="font-size:13px; font-weight:700; color:rgba(30,58,95,0.5); margin-right:3px;">Rp</span>{{ number_format($total, 0, ',', '.') }}
+
+                    <div style="border-top:1px solid rgba(30,58,95,0.1); margin-top:14px; padding-top:12px;">
+                        <div class="receipt-breakdown-row">
+                            <span>Subtotal</span>
+                            <span>Rp{{ number_format($subtotal, 0, ',', '.') }}</span>
+                        </div>
+                        <div class="receipt-breakdown-row">
+                            <span>Pajak (7%)</span>
+                            <span>Rp{{ number_format($pajak, 0, ',', '.') }}</span>
+                        </div>
+                        @if($biayaCard > 0)
+                        <div class="receipt-breakdown-row">
+                            <span>Biaya Card (2%)</span>
+                            <span>Rp{{ number_format($biayaCard, 0, ',', '.') }}</span>
+                        </div>
+                        @endif
+                        <div class="receipt-breakdown-row final">
+                            <span>Total</span>
+                            <span>Rp{{ number_format($totalBayar, 0, ',', '.') }}</span>
+                        </div>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>
@@ -231,8 +285,22 @@
                     <span class="font-bold" style="color:#1e3a5f;">{{ $pesanan->user->nama ?? '-' }}</span>
                 </div>
                 <div class="flex justify-between gap-4 text-sm">
+                    <span style="color:rgba(30,58,95,0.55);">Subtotal</span>
+                    <span class="font-bold" style="color:#1e3a5f;">Rp{{ number_format($subtotal, 0, ',', '.') }}</span>
+                </div>
+                <div class="flex justify-between gap-4 text-sm">
+                    <span style="color:rgba(30,58,95,0.55);">Pajak (7%)</span>
+                    <span class="font-bold" style="color:#1e3a5f;">Rp{{ number_format($pajak, 0, ',', '.') }}</span>
+                </div>
+                @if($biayaCard > 0)
+                <div class="flex justify-between gap-4 text-sm">
+                    <span style="color:rgba(30,58,95,0.55);">Biaya Card (2%)</span>
+                    <span class="font-bold" style="color:#1e3a5f;">Rp{{ number_format($biayaCard, 0, ',', '.') }}</span>
+                </div>
+                @endif
+                <div class="flex justify-between gap-4 text-sm pt-2" style="border-top:1px dashed rgba(30,58,95,0.1);">
                     <span style="color:rgba(30,58,95,0.55);">Total</span>
-                    <span class="font-black" style="color:#15803d;">Rp{{ number_format($total, 0, ',', '.') }}</span>
+                    <span class="font-black" style="color:#15803d;">Rp{{ number_format($totalBayar, 0, ',', '.') }}</span>
                 </div>
             </div>
 
@@ -248,14 +316,5 @@
         </div>
     </div>
 </div>
-
-@if(session('success'))
-<script>
-    window.addEventListener('load', function () {
-        // Redirect langsung ke halaman cetak (bukan tab baru)
-        window.location.href = "{{ route('struk.cetak', $pesanan->id_pesanan) }}";
-    });
-</script>
-@endif
 
 @endsection

@@ -58,6 +58,11 @@
         background: #eef2ff;
     }
 
+    .payment-method-card.active-card {
+        border-color: #6366f1;
+        background: rgba(99,102,241,0.05);
+    }
+
     .payment-total-box {
         background: #1e3a5f;
         border-radius: 18px;
@@ -103,6 +108,37 @@
         font-weight: 700;
         color: rgba(255,255,255,0.5);
         margin-right: 4px;
+    }
+
+    .payment-breakdown {
+        margin-top: 14px;
+        padding-top: 14px;
+        border-top: 1px solid rgba(255,255,255,0.12);
+        position: relative;
+        z-index: 2;
+    }
+
+    .payment-breakdown-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 12px;
+        color: rgba(255,255,255,0.6);
+        font-weight: 600;
+        margin-bottom: 6px;
+    }
+
+    .payment-breakdown-row:last-child {
+        margin-bottom: 0;
+    }
+
+    .payment-breakdown-row.total-row {
+        color: #fff;
+        font-size: 13px;
+        font-weight: 800;
+        padding-top: 8px;
+        margin-top: 4px;
+        border-top: 1px dashed rgba(255,255,255,0.2);
     }
 
     .payment-info-card {
@@ -303,7 +339,7 @@
         ? route('pesanan.index')
         : url('pesanan');
 
-    $total = $pesanan->total_harga ?? 0;
+    $subtotal = $pesanan->total_harga ?? 0;
 @endphp
 
 <div class="kasir-page-header">
@@ -367,7 +403,7 @@
                                 @php
                                     $harga = $d->menu->harga ?? 0;
                                     $jumlah = $d->jumlah ?? 0;
-                                    $subtotal = $d->subtotal ?? ($harga * $jumlah);
+                                    $subtotalItem = $d->subtotal ?? ($harga * $jumlah);
                                 @endphp
 
                                 <tr>
@@ -377,7 +413,7 @@
                                         <span class="kasir-badge kasir-badge-info">{{ $jumlah }}x</span>
                                     </td>
                                     <td class="font-black">
-                                        Rp{{ number_format($subtotal, 0, ',', '.') }}
+                                        Rp{{ number_format($subtotalItem, 0, ',', '.') }}
                                     </td>
                                 </tr>
                             @endforeach
@@ -394,20 +430,48 @@
             <div class="payment-total-box mb-5">
                 <div class="payment-total-label">Total Pembayaran</div>
                 <div class="payment-total-value">
-                    <span class="rp">Rp</span>{{ number_format($total, 0, ',', '.') }}
+                    <span class="rp">Rp</span><span id="displayTotal">{{ number_format($subtotal, 0, ',', '.') }}</span>
+                </div>
+
+                <div class="payment-breakdown">
+                    <div class="payment-breakdown-row">
+                        <span>Subtotal</span>
+                        <span>Rp{{ number_format($subtotal, 0, ',', '.') }}</span>
+                    </div>
+                    <div class="payment-breakdown-row">
+                        <span>Pajak (7%)</span>
+                        <span id="displayPajak">Rp{{ number_format(round($subtotal * 0.07), 0, ',', '.') }}</span>
+                    </div>
+                    <div class="payment-breakdown-row" id="rowBiayaCard" style="display:none;">
+                        <span>Biaya Card (2%)</span>
+                        <span id="displayBiayaCard">Rp0</span>
+                    </div>
+                    <div class="payment-breakdown-row total-row">
+                        <span>Total</span>
+                        <span id="displayTotalAkhir">Rp{{ number_format(round($subtotal + $subtotal * 0.07), 0, ',', '.') }}</span>
+                    </div>
                 </div>
             </div>
 
             <form action="{{ route('transaksi.proses', $pesanan->id_pesanan) }}" method="POST" id="formPembayaran">
                 @csrf
 
-                <input type="hidden" id="total" value="{{ $total }}">
+                <input type="hidden" id="subtotalRaw" value="{{ $subtotal }}">
+                <input type="hidden" name="bayar" id="bayarHidden" value="{{ round($subtotal + $subtotal * 0.07) }}">
 
                 <div class="mb-4">
                     <label class="kasir-form-label">Metode Pembayaran</label>
-                    <select name="metode_pembayaran" id="metode_pembayaran" class="kasir-select" required onchange="ubahMetodePembayaran()">
+
+                    <select name="metode_pembayaran"
+                            id="metode_pembayaran"
+                            class="kasir-select"
+                            required
+                            onchange="ubahMetodePembayaran()">
+
                         <option value="cash">💵 Cash / Tunai</option>
                         <option value="qris">📱 QRIS</option>
+                        <option value="card">💳 Debit / Credit Card</option>
+
                     </select>
                 </div>
 
@@ -430,20 +494,18 @@
                     </div>
                 </div>
 
-                <div class="mb-4">
+                <div class="mb-4" id="bayarWrapper">
                     <label class="kasir-form-label">Jumlah Bayar</label>
                     <input type="number"
-                           name="bayar"
                            id="bayar"
                            class="kasir-input"
-                           required
-                           min="{{ $total }}"
-                           value="{{ $total }}"
+                           min="0"
+                           value="{{ round($subtotal + $subtotal * 0.07) }}"
                            onkeyup="hitungKembalian()"
                            onchange="hitungKembalian()">
                 </div>
 
-                <div class="mb-5">
+                <div class="mb-5" id="kembalianWrapper">
                     <label class="kasir-form-label">Kembalian</label>
                     <input type="text"
                            id="kembalian"
@@ -513,48 +575,89 @@
     let sedangSubmitPembayaran = false;
 
     function formatRupiah(angka) {
-        return 'Rp' + angka.toLocaleString('id-ID');
+        return 'Rp' + Math.round(angka).toLocaleString('id-ID');
+    }
+
+    function hitungTotal() {
+        const subtotal   = parseInt(document.getElementById('subtotalRaw').value) || 0;
+        const metode     = document.getElementById('metode_pembayaran').value;
+        const pajak      = Math.round(subtotal * 0.07);
+        const biayaCard  = metode === 'card' ? Math.round((subtotal + pajak) * 0.02) : 0;
+        const total      = subtotal + pajak + biayaCard;
+
+        return { subtotal, pajak, biayaCard, total };
+    }
+
+    function updateBreakdown() {
+        const { pajak, biayaCard, total } = hitungTotal();
+        const metode = document.getElementById('metode_pembayaran').value;
+
+        document.getElementById('displayPajak').textContent      = formatRupiah(pajak);
+        document.getElementById('displayBiayaCard').textContent  = formatRupiah(biayaCard);
+        document.getElementById('displayTotal').textContent      = total.toLocaleString('id-ID');
+        document.getElementById('displayTotalAkhir').textContent = formatRupiah(total);
+
+        const rowBiayaCard = document.getElementById('rowBiayaCard');
+        rowBiayaCard.style.display = metode === 'card' ? '' : 'none';
     }
 
     function hitungKembalian() {
-        const total = parseInt(document.getElementById('total').value) || 0;
-        const bayar = parseInt(document.getElementById('bayar').value) || 0;
-        const kembalian = bayar - total;
+        const { total } = hitungTotal();
+        const bayar      = parseInt(document.getElementById('bayar').value) || 0;
+        const kembalian  = bayar - total;
 
         document.getElementById('kembalian').value = formatRupiah(kembalian >= 0 ? kembalian : 0);
+        document.getElementById('bayarHidden').value = bayar;
     }
 
     function ubahMetodePembayaran() {
         const metode = document.getElementById('metode_pembayaran').value;
-        const total = parseInt(document.getElementById('total').value) || 0;
-        const bayar = document.getElementById('bayar');
+        const bayarInput     = document.getElementById('bayar');
+        const bayarWrapper   = document.getElementById('bayarWrapper');
+        const kembalianWrapper = document.getElementById('kembalianWrapper');
 
-        const info = document.getElementById('paymentMethodInfo');
+        const info     = document.getElementById('paymentMethodInfo');
         const iconWrap = document.getElementById('paymentMethodIconWrap');
-        const icon = document.getElementById('paymentMethodIcon');
-        const title = document.getElementById('paymentMethodTitle');
-        const desc = document.getElementById('paymentMethodDesc');
+        const icon     = document.getElementById('paymentMethodIcon');
+        const title    = document.getElementById('paymentMethodTitle');
+        const desc     = document.getElementById('paymentMethodDesc');
 
-        bayar.value = total;
+        updateBreakdown();
+        const { total } = hitungTotal();
+
+        bayarInput.value = total;
+        document.getElementById('bayarHidden').value = total;
 
         if (metode === 'qris') {
-            bayar.readOnly = true;
-            info.classList.remove('active-cash');
-            info.classList.add('active-qris');
+            bayarInput.readOnly = true;
+            bayarWrapper.style.display   = '';
+            kembalianWrapper.style.display = '';
+            info.className = 'payment-method-card active-qris mb-4';
             iconWrap.style.background = '#60a5fa';
-            icon.className = 'bi bi-qr-code';
+            icon.className  = 'bi bi-qr-code';
             icon.style.color = '#1e3a5f';
             title.textContent = 'Pembayaran QRIS';
-            desc.textContent = 'Nominal mengikuti total pesanan.';
+            desc.textContent  = 'Nominal mengikuti total pesanan.';
+        } else if (metode === 'card') {
+            bayarInput.readOnly = true;
+            bayarWrapper.style.display   = 'none';
+            kembalianWrapper.style.display = 'none';
+            info.className = 'payment-method-card active-card mb-4';
+            iconWrap.style.background = 'rgba(99,102,241,0.15)';
+            icon.className  = 'bi bi-credit-card-2-front';
+            icon.style.color = '#6366f1';
+            title.textContent = 'Pembayaran Debit / Credit Card';
+            desc.textContent  = 'Nominal diproses langsung melalui mesin EDC. Biaya 2% ditambahkan.';
         } else {
-            bayar.readOnly = false;
-            info.classList.remove('active-qris');
-            info.classList.add('active-cash');
+            bayarInput.readOnly = false;
+            bayarWrapper.style.display   = '';
+            kembalianWrapper.style.display = '';
+            info.className = 'payment-method-card active-cash mb-4';
             iconWrap.style.background = 'rgba(34,197,94,0.15)';
-            icon.className = 'bi bi-cash-coin';
+            icon.className  = 'bi bi-cash-coin';
             icon.style.color = '#16a34a';
             title.textContent = 'Pembayaran Cash';
-            desc.textContent = 'Jumlah bayar bisa diubah jika uang lebih.';
+            desc.textContent  = 'Jumlah bayar bisa diubah jika uang lebih.';
         }
 
         hitungKembalian();
@@ -568,16 +671,17 @@
             return;
         }
 
-        const total = parseInt(document.getElementById('total').value) || 0;
-        const bayar = parseInt(document.getElementById('bayar').value) || 0;
+        const metode       = document.getElementById('metode_pembayaran').value;
+        const { total }    = hitungTotal();
+        const bayar        = parseInt(document.getElementById('bayar').value) || 0;
 
-        if (bayar < total) {
+        if (metode === 'cash' && bayar < total) {
             alert('Jumlah bayar kurang dari total pembayaran.');
             return;
         }
 
         const modal = document.getElementById('paymentConfirmModal');
-        const box = document.getElementById('paymentConfirmBox');
+        const box   = document.getElementById('paymentConfirmBox');
 
         box.classList.remove('success-mode');
         modal.classList.add('show');
@@ -585,12 +689,10 @@
     }
 
     function closePaymentConfirmModal() {
-        if (sedangSubmitPembayaran) {
-            return;
-        }
+        if (sedangSubmitPembayaran) return;
 
         const modal = document.getElementById('paymentConfirmModal');
-        const box = document.getElementById('paymentConfirmBox');
+        const box   = document.getElementById('paymentConfirmBox');
 
         modal.classList.remove('show');
         box.classList.remove('success-mode');
@@ -598,15 +700,13 @@
     }
 
     function submitPembayaran() {
-        if (sedangSubmitPembayaran) {
-            return;
-        }
+        if (sedangSubmitPembayaran) return;
 
         sedangSubmitPembayaran = true;
 
-        const box = document.getElementById('paymentConfirmBox');
+        const box  = document.getElementById('paymentConfirmBox');
         const form = document.getElementById('formPembayaran');
-        const btn = document.getElementById('btnSubmitPembayaran');
+        const btn  = document.getElementById('btnSubmitPembayaran');
 
         if (btn) {
             btn.disabled = true;
@@ -625,20 +725,15 @@
         hitungKembalian();
 
         const modal = document.getElementById('paymentConfirmModal');
-
         if (modal) {
-            modal.addEventListener('click', function(e) {
-                if (e.target === this) {
-                    closePaymentConfirmModal();
-                }
+            modal.addEventListener('click', function (e) {
+                if (e.target === this) closePaymentConfirmModal();
             });
         }
     });
 
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            closePaymentConfirmModal();
-        }
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closePaymentConfirmModal();
     });
 </script>
 @endsection

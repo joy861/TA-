@@ -126,11 +126,15 @@ Route::middleware(['auth'])->group(function () {
     | DAPUR / DETAIL PESANAN
     |--------------------------------------------------------------------------
     */
-    Route::get('/dapur/{id}', [DetailPesananController::class, 'dapur'])
-        ->name('dapur.index');
+Route::get('/dapur/{id}', [DetailPesananController::class, 'dapur'])
+    ->name('dapur.index');
 
-    Route::post('/dapur/{id}/selesai', [DetailPesananController::class, 'selesai'])
-        ->name('dapur.selesai');
+Route::post('/dapur/{id}/selesai', [DetailPesananController::class, 'selesai'])
+    ->name('dapur.selesai');
+
+// Tambahkan ini:
+Route::post('/dapur/{id}/cetak', [DetailPesananController::class, 'cetakDapur'])
+    ->name('dapur.cetak');
 
 
     /*
@@ -157,4 +161,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/struk/{id}/cetak', [StrukController::class, 'cetak'])
         ->name('struk.cetak');
+
+    Route::post('/struk/{id}/print', [StrukController::class, 'cetakThermal'])
+        ->name('struk.print');
 });

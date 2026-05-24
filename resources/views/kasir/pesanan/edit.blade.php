@@ -81,19 +81,7 @@
         background: #eef2ff;
     }
 
-    .menu-card.selected-lama {
-        border-color: rgba(30,58,95,0.2);
-        background: rgba(30,58,95,0.02);
-        cursor: default;
-    }
-
-    .menu-card.selected-lama:hover {
-        border-color: rgba(30,58,95,0.2);
-        transform: none;
-    }
-
-    .check-badge,
-    .lock-badge {
+    .check-badge {
         display: none;
         position: absolute;
         top: 10px;
@@ -105,23 +93,11 @@
         justify-content: center;
         font-size: 11px;
         font-weight: 900;
-    }
-
-    .check-badge {
         background: #1e3a5f;
         color: #60a5fa;
     }
 
-    .lock-badge {
-        background: rgba(30,58,95,0.5);
-        color: #fff;
-    }
-
     .menu-card.selected .check-badge {
-        display: flex;
-    }
-
-    .menu-card.selected-lama .lock-badge {
         display: flex;
     }
 
@@ -147,8 +123,7 @@
         margin-top: 14px;
     }
 
-    .menu-card.selected .qty-control,
-    .menu-card.selected-lama .qty-control {
+    .menu-card.selected .qty-control {
         display: flex;
     }
 
@@ -187,18 +162,6 @@
         color: #1e3a5f;
     }
 
-    .lama-label {
-        display: none;
-        margin-top: 8px;
-        font-size: 10px;
-        color: rgba(30,58,95,0.5);
-        font-weight: 700;
-    }
-
-    .menu-card.selected-lama .lama-label {
-        display: block;
-    }
-
     .order-bar {
         background: #eef2ff;
         border-radius: 14px;
@@ -212,17 +175,6 @@
         padding: 6px 0;
         font-size: 13px;
         color: #1e3a5f;
-    }
-
-    .badge-lama {
-        display: inline-flex;
-        margin-left: 4px;
-        padding: 1px 6px;
-        border-radius: 999px;
-        background: rgba(30,58,95,0.12);
-        color: rgba(30,58,95,0.6);
-        font-size: 9px;
-        font-weight: 800;
     }
 
     .order-total {
@@ -425,25 +377,13 @@
     }
 
     @keyframes popSuccess {
-        0% {
-            transform: scale(0.75);
-            opacity: 0;
-        }
-        100% {
-            transform: scale(1);
-            opacity: 1;
-        }
+        0% { transform: scale(0.75); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
     }
 
     @keyframes drawCheck {
-        0% {
-            transform: rotate(-45deg) scale(0);
-            opacity: 0;
-        }
-        100% {
-            transform: rotate(-45deg) scale(1);
-            opacity: 1;
-        }
+        0% { transform: rotate(-45deg) scale(0); opacity: 0; }
+        100% { transform: rotate(-45deg) scale(1); opacity: 1; }
     }
 
     @media (max-width: 576px) {
@@ -477,7 +417,7 @@
     <div>
         <p class="kasir-page-eyebrow">TRANSAKSI</p>
         <h1 class="kasir-page-title">Edit Pesanan</h1>
-        <div class="kasir-page-subtitle">Tambahkan menu baru atau ubah jumlah pesanan</div>
+        <div class="kasir-page-subtitle">Tambahkan atau hapus menu dari pesanan</div>
     </div>
 
     <a href="{{ $backUrl }}" class="kasir-btn kasir-btn-ghost">
@@ -521,7 +461,7 @@
                 <div class="flex items-start justify-between gap-4 mb-4">
                     <div>
                         <h2 class="kasir-section-title">Pilih Menu</h2>
-                        <div class="kasir-section-subtitle">Menu lama tidak bisa dihapus, hanya bisa ditambah quantity</div>
+                        <div class="kasir-section-subtitle">Pilih dan atur jumlah menu pesanan</div>
                     </div>
 
                     <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background:#60a5fa;">
@@ -548,27 +488,19 @@
                         @foreach($menu as $mn)
                             @php
                                 $detail = $pesanan->detailPesanan->firstWhere('id_menu', $mn->id_menu);
-                                $isLama = $detail && !$detail->is_new;
-                                $isBaru = $detail && $detail->is_new;
+                                $isSelected = $detail !== null;
                                 $qty = $detail ? $detail->jumlah : 1;
-                                $qtyMin = $isLama ? $detail->jumlah : 1;
                             @endphp
 
-                            <div class="menu-card {{ $isLama ? 'selected-lama' : ($isBaru ? 'selected' : '') }}"
+                            <div class="menu-card {{ $isSelected ? 'selected' : '' }}"
                                  data-id="{{ $mn->id_menu }}"
                                  data-kategori="{{ $mn->id_kategori }}"
                                  data-harga="{{ $mn->harga }}"
                                  data-nama="{{ $mn->nama_menu }}"
-                                 data-is-lama="{{ $isLama ? 'true' : 'false' }}"
-                                 data-qty-min="{{ $qtyMin }}"
                                  onclick="toggleMenu(this)">
 
                                 <div class="check-badge">
                                     <i class="bi bi-check-lg"></i>
-                                </div>
-
-                                <div class="lock-badge">
-                                    <i class="bi bi-lock-fill"></i>
                                 </div>
 
                                 <div>
@@ -580,12 +512,11 @@
                                     <div class="qty-control">
                                         <button type="button"
                                                 class="qty-btn btn-kurang"
-                                                onclick="ubahQty(event, this, -1)"
-                                                {{ $isLama ? 'disabled' : '' }}>
+                                                onclick="ubahQty(event, this, -1)">
                                             −
                                         </button>
 
-                                        <span class="qty-num">{{ $detail ? $qty : 1 }}</span>
+                                        <span class="qty-num">{{ $qty }}</span>
 
                                         <button type="button"
                                                 class="qty-btn btn-tambah"
@@ -593,8 +524,6 @@
                                             +
                                         </button>
                                     </div>
-
-                                    <div class="lama-label">Pesanan sebelumnya · tidak bisa dihapus</div>
                                 </div>
                             </div>
                         @endforeach
@@ -654,11 +583,11 @@
             <h3 class="confirm-modal-title">Konfirmasi Pesanan</h3>
 
             <p class="confirm-modal-text">
-                Yakin ingin menambah pesanan ini?
+                Yakin ingin menyimpan perubahan?
             </p>
 
             <p class="confirm-modal-subtext">
-                Data pesanan akan diperbarui dan menu tambahan akan masuk ke ringkasan pesanan.
+                Data pesanan akan diperbarui sesuai menu yang dipilih saat ini.
             </p>
 
             <div class="confirm-modal-actions">
@@ -690,35 +619,26 @@
 <script>
     const pesanan = {};
 
-    document.querySelectorAll('.menu-card.selected, .menu-card.selected-lama').forEach(card => {
+    // Inisialisasi dari menu yang sudah dipilih
+    document.querySelectorAll('.menu-card.selected').forEach(card => {
         const id = card.dataset.id;
-        const isLama = card.dataset.isLama === 'true';
-        const qtyMin = parseInt(card.dataset.qtyMin);
         const qty = parseInt(card.querySelector('.qty-num').textContent);
-
         pesanan[id] = {
             qty,
-            isLama,
-            qtyMin,
             nama: card.dataset.nama,
             harga: parseInt(card.dataset.harga)
         };
-
-        if (isLama) {
-            card.querySelector('.btn-kurang').disabled = qty <= qtyMin;
-        }
     });
 
+    // Inject hidden input id_detail[] untuk detail pesanan yang sudah ada
     @foreach($pesanan->detailPesanan as $d)
         (function() {
             const wrap = document.getElementById('hidden-inputs');
-
             const hid = document.createElement('input');
             hid.type = 'hidden';
             hid.name = 'id_detail[]';
             hid.value = '{{ $d->id_detail }}';
             hid.dataset.forMenu = '{{ $d->id_menu }}';
-
             wrap.appendChild(hid);
         })();
     @endforeach
@@ -729,10 +649,6 @@
     function toggleMenu(card) {
         const id = card.dataset.id;
 
-        if (card.dataset.isLama === 'true') {
-            return;
-        }
-
         if (pesanan[id]) {
             delete pesanan[id];
             card.classList.remove('selected');
@@ -740,12 +656,9 @@
         } else {
             pesanan[id] = {
                 qty: 1,
-                isLama: false,
-                qtyMin: 1,
                 nama: card.dataset.nama,
                 harga: parseInt(card.dataset.harga)
             };
-
             card.classList.add('selected');
         }
 
@@ -758,38 +671,24 @@
 
         const card = btn.closest('.menu-card');
         const id = card.dataset.id;
-        const isLama = card.dataset.isLama === 'true';
         const qtyEl = card.querySelector('.qty-num');
-        const btnKurang = card.querySelector('.btn-kurang');
 
-        if (!pesanan[id]) {
-            return;
-        }
+        if (!pesanan[id]) return;
 
-        const qtyMin = pesanan[id].qtyMin;
         let qty = pesanan[id].qty + delta;
 
-        if (!isLama && qty < 1) {
+        if (qty < 1) {
+            // Kurang dari 1 = hapus dari pesanan
             delete pesanan[id];
             card.classList.remove('selected');
             qtyEl.textContent = 1;
-
             updateHidden();
             updateOrderBar();
-
-            return;
-        }
-
-        if (isLama && qty < qtyMin) {
             return;
         }
 
         pesanan[id].qty = qty;
         qtyEl.textContent = qty;
-
-        if (isLama) {
-            btnKurang.disabled = qty <= qtyMin;
-        }
 
         updateHidden();
         updateOrderBar();
@@ -798,6 +697,7 @@
     function updateHidden() {
         const wrap = document.getElementById('hidden-inputs');
 
+        // Hapus input menu[] dan jumlah[] lama
         wrap.querySelectorAll('input[name="menu[]"], input[name="jumlah[]"]').forEach(el => el.remove());
 
         Object.entries(pesanan).forEach(([id, data]) => {
@@ -835,14 +735,11 @@
         list.innerHTML = ids.map(id => {
             const d = pesanan[id];
             const sub = d.harga * d.qty;
-
             total += sub;
-
-            const badge = d.isLama ? '<span class="badge-lama">lama</span>' : '';
 
             return `
                 <div class="order-item">
-                    <span>${d.nama}${badge} <strong>x${d.qty}</strong></span>
+                    <span>${d.nama} <strong>x${d.qty}</strong></span>
                     <span><strong>Rp${sub.toLocaleString('id-ID')}</strong></span>
                 </div>
             `;
@@ -898,15 +795,11 @@
     }
 
     document.getElementById('confirmUpdateModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeConfirmUpdateModal();
-        }
+        if (e.target === this) closeConfirmUpdateModal();
     });
 
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            closeConfirmUpdateModal();
-        }
+        if (e.key === 'Escape') closeConfirmUpdateModal();
     });
 </script>
 

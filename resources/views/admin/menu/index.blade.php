@@ -54,7 +54,8 @@
                     <th class="text-left px-5 py-3 text-xs font-bold tracking-widest uppercase w-16" style="color:rgba(30,58,95,0.35);">Foto</th>
                     <th class="text-left px-5 py-3 text-xs font-bold tracking-widest uppercase" style="color:rgba(30,58,95,0.35);">Nama Menu</th>
                     <th class="text-left px-5 py-3 text-xs font-bold tracking-widest uppercase" style="color:rgba(30,58,95,0.35);">Kategori</th>
-                    <th class="text-left px-5 py-3 text-xs font-bold tracking-widest uppercase" style="color:rgba(30,58,95,0.35);">Harga</th>
+                    <th class="text-left px-5 py-3 text-xs font-bold tracking-widest uppercase" style="color:rgba(30,58,95,0.35);">Harga Normal</th>
+                    <th class="text-left px-5 py-3 text-xs font-bold tracking-widest uppercase" style="color:rgba(30,58,95,0.35);">Harga Guide</th>
                     <th class="text-left px-5 py-3 text-xs font-bold tracking-widest uppercase" style="color:rgba(30,58,95,0.35);">Status</th>
                     <th class="text-right px-5 py-3 text-xs font-bold tracking-widest uppercase" style="color:rgba(30,58,95,0.35);">Aksi</th>
                 </tr>
@@ -79,7 +80,24 @@
                     </td>
                     <td class="px-5 py-3.5 font-bold capitalize" style="color:#1e3a5f;">{{ $m->nama_menu }}</td>
                     <td class="px-5 py-3.5 text-xs font-semibold capitalize" style="color:rgba(30,58,95,0.5);">{{ $m->kategori->nama_kategori ?? '-' }}</td>
-                    <td class="px-5 py-3.5 font-black" style="color:#1e3a5f;">Rp {{ number_format($m->harga, 0, ',', '.') }}</td>
+
+                    {{-- Harga Normal --}}
+                    <td class="px-5 py-3.5 font-black" style="color:#1e3a5f;">
+                        Rp {{ number_format($m->harga, 0, ',', '.') }}
+                    </td>
+
+                    {{-- Harga Guide --}}
+                    <td class="px-5 py-3.5">
+                        @if($m->harga_guide)
+                            <span class="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full"
+                                  style="background:#e0f0ff; color:#1e5fa5;">
+                                ★ Rp {{ number_format($m->harga_guide, 0, ',', '.') }}
+                            </span>
+                        @else
+                            <span class="text-xs" style="color:rgba(30,58,95,0.3);">—</span>
+                        @endif
+                    </td>
+
                     <td class="px-5 py-3.5">
                         @if($m->status == 'tersedia')
                             <span class="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full"
@@ -117,7 +135,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="7" class="px-5 py-12 text-center text-sm" style="color:rgba(30,58,95,0.3);">
+                    <td colspan="8" class="px-5 py-12 text-center text-sm" style="color:rgba(30,58,95,0.3);">
                         <i class="bi bi-journal-text text-3xl block mb-2"></i>
                         Belum ada menu. Klik "Tambah Menu" untuk mulai.
                     </td>

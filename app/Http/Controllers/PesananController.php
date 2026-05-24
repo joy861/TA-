@@ -14,14 +14,57 @@ use Illuminate\Support\Facades\Auth;
 class PesananController extends Controller
 {
     public function index(Request $request)
-    {
-        $pesanans = Pesanan::with('meja', 'user')
-            ->whereDate('created_at', today())
-            ->orderBy('created_at', 'desc')
-            ->get();
+{
+    $query = Pesanan::with('meja', 'user')->orderBy('created_at', 'desc');
 
-        return view('kasir.pesanan.index', compact('pesanans'));
+    // ── Resolve periode shortcut ──────────────────────────────
+    $tanggalDari   = $request->tanggal_dari;
+    $tanggalSampai = $request->tanggal_sampai;
+
+    if ($request->periode === 'hari_ini') {
+        $tanggalDari = $tanggalSampai = today()->format('Y-m-d');
+    } elseif ($request->periode === 'kemarin') {
+        $tanggalDari = $tanggalSampai = today()->subDay()->format('Y-m-d');
+    } elseif ($request->periode === '7_hari') {
+        $tanggalDari   = today()->subDays(6)->format('Y-m-d');
+        $tanggalSampai = today()->format('Y-m-d');
     }
+
+    // ── Default: kalau tidak ada filter tanggal sama sekali, tampilkan hari ini ──
+    if (!$tanggalDari && !$tanggalSampai && !$request->periode) {
+        $tanggalDari = $tanggalSampai = today()->format('Y-m-d');
+    }
+
+    // ── Terapkan filter tanggal ───────────────────────────────
+    if ($tanggalDari) {
+        $query->whereDate('created_at', '>=', $tanggalDari);
+    }
+    if ($tanggalSampai) {
+        $query->whereDate('created_at', '<=', $tanggalSampai);
+    }
+
+    // ── Filter status ─────────────────────────────────────────
+    $statusLunas = ['sudah_bayar', 'sudah bayar', 'lunas', 'selesai'];
+
+    if ($request->filter === 'belum_bayar') {
+        $query->whereNotIn('status', $statusLunas);
+    } elseif ($request->filter === 'sudah_bayar') {
+        $query->whereIn('status', $statusLunas);
+    }
+
+    // ── Filter pencarian meja ─────────────────────────────────
+// ── Filter pencarian meja ─────────────────────────────────
+if ($request->search) {
+    $search = preg_replace('/[^0-9a-zA-Z]/', '', $request->search);
+    $query->whereHas('meja', function ($q) use ($search) {
+        $q->where('nomor_meja', 'like', "%{$search}%");
+    });
+}
+
+    $pesanans = $query->get();
+
+    return view('kasir.pesanan.index', compact('pesanans'));
+}
 
     public function create()
     {
@@ -69,10 +112,10 @@ class PesananController extends Controller
             Meja::where('id_meja', $request->id_meja)
                 ->update(['status' => 'terisi']);
 
-            DB::commit();
+DB::commit();
 
-            return redirect()->route('pesanan.index')
-                ->with('success', 'Pesanan berhasil disimpan!');
+return redirect()->route('pesanan.detail', $pesanan->id_pesanan)
+    ->with('success', 'Pesanan berhasil disimpan dan siap dicetak!');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -98,87 +141,82 @@ class PesananController extends Controller
         return view('kasir.pesanan.edit', compact('pesanan', 'menu', 'meja', 'kategori'));
     }
 
-    public function update(Request $request, $id)
-    {
-        DB::beginTransaction();
+public function update(Request $request, $id)
+{
+    DB::beginTransaction();
 
-        try {
-            $pesanan         = Pesanan::findOrFail($id);
-            $oldMeja         = $pesanan->id_meja;
-            $total           = 0;
-            $existingDetails = DetailPesanan::where('id_pesanan', $id)->get();
-            $processedIds    = [];
+    try {
+        $pesanan         = Pesanan::findOrFail($id);
+        $oldMeja         = $pesanan->id_meja;
+        $total           = 0;
+        $existingDetails = DetailPesanan::where('id_pesanan', $id)->get();
+        $processedIds    = [];
 
-            foreach ($request->menu as $key => $id_menu) {
-                $menu       = Menu::findOrFail($id_menu);
-                $jumlahBaru = (int) $request->jumlah[$key];
-                $id_detail  = $request->id_detail[$key] ?? null;
+        foreach ($request->menu as $key => $id_menu) {
+            $menu       = Menu::findOrFail($id_menu);
+            $jumlahBaru = (int) $request->jumlah[$key];
+            $id_detail  = $request->id_detail[$key] ?? null;
 
-                $detail = null;
-                if ($id_detail) {
-                    $detail = $existingDetails->firstWhere('id_detail', $id_detail);
-                }
-
-                if ($detail) {
-                    if ($detail->is_new == 0 && $jumlahBaru < $detail->jumlah) {
-                        throw new \Exception("Jumlah tidak boleh dikurangi: " . $menu->nama_menu);
-                    }
-
-                    $detail->update([
-                        'jumlah'      => $jumlahBaru,
-                        'subtotal'    => $menu->harga * $jumlahBaru,
-                        'jumlah_awal' => ($detail->is_new == 0 && $jumlahBaru > $detail->jumlah)
-                            ? $detail->jumlah
-                            : null,
-                    ]);
-
-                    $processedIds[] = $detail->id_detail;
-                    $total += $menu->harga * $jumlahBaru;
-
-                } else {
-                    $new = DetailPesanan::create([
-                        'id_pesanan'  => $id,
-                        'id_menu'     => $id_menu,
-                        'jumlah'      => $jumlahBaru,
-                        'subtotal'    => $menu->harga * $jumlahBaru,
-                        'is_new'      => 1,
-                        'jumlah_awal' => null,
-                    ]);
-
-                    $processedIds[] = $new->id_detail;
-                    $total += $menu->harga * $jumlahBaru;
-                }
+            $detail = null;
+            if ($id_detail) {
+                $detail = $existingDetails->firstWhere('id_detail', $id_detail);
             }
 
-            foreach ($existingDetails as $detail) {
-                if (!in_array($detail->id_detail, $processedIds)) {
-                    if ($detail->is_new == 0) {
-                        throw new \Exception("Pesanan lama tidak boleh dihapus!");
-                    }
-                    $detail->delete();
-                }
+            if ($detail) {
+                // ✅ Hapus validasi jumlah tidak boleh dikurangi
+                $detail->update([
+                    'jumlah'      => $jumlahBaru,
+                    'subtotal'    => $menu->harga * $jumlahBaru,
+                    'jumlah_awal' => ($jumlahBaru != $detail->jumlah)
+                        ? $detail->jumlah  // catat jumlah sebelum diubah
+                        : $detail->jumlah_awal,
+                ]);
+
+                $processedIds[] = $detail->id_detail;
+                $total += $menu->harga * $jumlahBaru;
+
+            } else {
+                $new = DetailPesanan::create([
+                    'id_pesanan'  => $id,
+                    'id_menu'     => $id_menu,
+                    'jumlah'      => $jumlahBaru,
+                    'subtotal'    => $menu->harga * $jumlahBaru,
+                    'is_new'      => 1,
+                    'jumlah_awal' => null,
+                ]);
+
+                $processedIds[] = $new->id_detail;
+                $total += $menu->harga * $jumlahBaru;
             }
-
-            $pesanan->update([
-                'id_meja'     => $request->id_meja,
-                'total_harga' => $total,
-            ]);
-
-            if ($oldMeja != $request->id_meja) {
-                Meja::where('id_meja', $oldMeja)->update(['status' => 'kosong']);
-                Meja::where('id_meja', $request->id_meja)->update(['status' => 'terisi']);
-            }
-
-            DB::commit();
-
-            return redirect()->route('pesanan.index')
-                ->with('success', 'Pesanan berhasil diupdate!');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', $e->getMessage());
         }
+
+        // ✅ Semua item yang tidak diproses boleh dihapus, termasuk pesanan lama
+        foreach ($existingDetails as $detail) {
+            if (!in_array($detail->id_detail, $processedIds)) {
+                $detail->delete();
+            }
+        }
+
+        $pesanan->update([
+            'id_meja'     => $request->id_meja,
+            'total_harga' => $total,
+        ]);
+
+        if ($oldMeja != $request->id_meja) {
+            Meja::where('id_meja', $oldMeja)->update(['status' => 'kosong']);
+            Meja::where('id_meja', $request->id_meja)->update(['status' => 'terisi']);
+        }
+
+        DB::commit();
+
+        return redirect()->route('pesanan.index')
+            ->with('success', 'Pesanan berhasil diupdate!');
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return back()->with('error', $e->getMessage());
     }
+}
 
     // ✅ GET — Tampilkan halaman form pembayaran
     public function showBayar($id)
@@ -191,7 +229,7 @@ class PesananController extends Controller
     public function bayar(Request $request, $id)
 {
     $request->validate([
-        'metode_pembayaran' => 'required|in:cash,qris',
+        'metode_pembayaran' => 'required|in:cash,qris,card',
         'bayar'             => 'required|numeric|min:0',
     ]);
 

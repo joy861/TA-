@@ -26,6 +26,7 @@ class MenuController extends Controller
         $request->validate([
             'nama_menu'   => 'required',
             'harga'       => 'required|numeric',
+            'harga_guide' => 'required|numeric',  // tambah ini
             'id_kategori' => 'required|exists:kategori,id_kategori',
             'status'      => 'required|in:tersedia,habis',
             'foto'        => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
@@ -39,6 +40,7 @@ class MenuController extends Controller
         Menu::create([
             'nama_menu'   => $request->nama_menu,
             'harga'       => $request->harga,
+            'harga_guide' => $request->harga_guide,  // tambah ini
             'id_kategori' => $request->id_kategori,
             'status'      => $request->status,
             'foto'        => $fotoPath,
@@ -61,6 +63,7 @@ class MenuController extends Controller
         $request->validate([
             'nama_menu'   => 'required',
             'harga'       => 'required|numeric',
+            'harga_guide' => 'required|numeric',  // tambah ini
             'id_kategori' => 'required|exists:kategori,id_kategori',
             'status'      => 'required|in:tersedia,habis',
             'foto'        => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
@@ -69,6 +72,7 @@ class MenuController extends Controller
         $data = [
             'nama_menu'   => $request->nama_menu,
             'harga'       => $request->harga,
+            'harga_guide' => $request->harga_guide,  // tambah ini
             'id_kategori' => $request->id_kategori,
             'status'      => $request->status,
         ];

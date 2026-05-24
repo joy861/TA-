@@ -262,7 +262,7 @@
     {{-- TOMBOL (hanya tampil di layar, tidak ikut print) --}}
     <div class="btn-row">
         <a href="{{ route('pesanan.index') }}" class="btn">← Kembali</a>
-        <button class="btn btn-print" onclick="printDapur()">Cetak ke Dapur</button>
+        <button type="button" class="btn btn-print" onclick="printDapur()">Cetak ke Dapur</button>
     </div>
 
 </body>
@@ -281,20 +281,45 @@
         fetch(form.action, {
             method: 'POST',
             headers: {
-                'X-CSRF-TOKEN': document.querySelector('input[name=_token]').value
+                'X-CSRF-TOKEN': document.querySelector('input[name=_token]').value,
+                'Accept': 'application/json'
             }
         }).then(() => {
             window.location.href = "{{ route('pesanan.index') }}";
         });
     }
 
-    function printDapur() {
-        window.print();
+    async function printDapur() {
+        if (sudahKirim) return;
+        sudahKirim = true;
+
+        let btn = document.querySelector('.btn-print');
+        btn.textContent = 'Mengirim ke printer...';
+        btn.disabled = true;
+
+        try {
+            let response = await fetch("{{ route('dapur.cetak', $pesanan->id_pesanan) }}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('input[name=_token]').value,
+                    'Accept': 'application/json'
+                }
+            });
+
+            let result = await response.json().catch(() => null);
+            if (!response.ok) {
+                throw new Error(result?.message || 'Gagal mengirim ke printer');
+            }
+
+            submitDanRedirect();
+        } catch (error) {
+            sudahKirim = false;
+            btn.textContent = 'Cetak ke Dapur';
+            btn.disabled = false;
+            alert(error.message || 'Terjadi kesalahan saat mengirim printer.');
+        }
     }
 
-    window.onafterprint = function () {
-        submitDanRedirect();
-    };
 </script>
 
 </html>

@@ -62,21 +62,49 @@
                         </div>
                     </div>
 
+                    {{-- HARGA --}}
                     <div>
-                        <label class="block text-sm font-bold mb-1.5" style="color:#1e3a5f;">Harga</label>
-                        <div class="flex rounded-xl overflow-hidden transition-all"
-                             style="border:1.5px solid rgba(30,58,95,0.12);"
-                             onfocusin="this.style.borderColor='#60a5fa';this.style.boxShadow='0 0 0 3px rgba(96,165,250,0.12)'"
-                             onfocusout="this.style.borderColor='rgba(30,58,95,0.12)';this.style.boxShadow='none'">
-                            <span class="px-4 py-2.5 text-sm font-bold flex items-center flex-shrink-0"
-                                  style="background:#eef2ff; color:#1e3a5f; border-right:1.5px solid rgba(30,58,95,0.1);">Rp</span>
-                            <input type="number" name="harga" value="{{ old('harga') }}" placeholder="0" min="0"
-                                   class="flex-1 px-4 py-2.5 text-sm outline-none font-bold"
-                                   style="color:#1e3a5f; border:none; background:transparent;" required>
+                        <label class="block text-sm font-bold mb-2" style="color:#1e3a5f;">Harga</label>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                            {{-- Harga Normal --}}
+                            <div>
+                                <p class="text-xs mb-1.5" style="color:rgba(30,58,95,0.5);">Harga Normal (Customer)</p>
+                                <div class="flex rounded-xl overflow-hidden transition-all"
+                                     style="border:1.5px solid rgba(30,58,95,0.12);"
+                                     onfocusin="this.style.borderColor='#60a5fa';this.style.boxShadow='0 0 0 3px rgba(96,165,250,0.12)'"
+                                     onfocusout="this.style.borderColor='rgba(30,58,95,0.12)';this.style.boxShadow='none'">
+                                    <span class="px-4 py-2.5 text-sm font-bold flex items-center flex-shrink-0"
+                                          style="background:#eef2ff; color:#1e3a5f; border-right:1.5px solid rgba(30,58,95,0.1);">Rp</span>
+                                    <input type="number" name="harga" value="{{ old('harga') }}" placeholder="0" min="0"
+                                           class="flex-1 px-4 py-2.5 text-sm outline-none font-bold"
+                                           style="color:#1e3a5f; border:none; background:transparent;" required>
+                                </div>
+                                @error('harga')<p class="text-xs mt-1 text-red-500">{{ $message }}</p>@enderror
+                            </div>
+
+                            {{-- Harga Guide --}}
+                            <div>
+                                <p class="text-xs mb-1.5 font-semibold" style="color:#1e3a5f;">
+                                    Harga Guide <span style="color:#60a5fa;">★</span>
+                                </p>
+                                <div class="flex rounded-xl overflow-hidden transition-all"
+                                     style="border:1.5px solid rgba(96,165,250,0.4);"
+                                     onfocusin="this.style.borderColor='#60a5fa';this.style.boxShadow='0 0 0 3px rgba(96,165,250,0.12)'"
+                                     onfocusout="this.style.borderColor='rgba(96,165,250,0.4)';this.style.boxShadow='none'">
+                                    <span class="px-4 py-2.5 text-sm font-bold flex items-center flex-shrink-0"
+                                          style="background:#e0f0ff; color:#1e3a5f; border-right:1.5px solid rgba(96,165,250,0.2);">Rp</span>
+                                    <input type="number" name="harga_guide" value="{{ old('harga_guide') }}" placeholder="0" min="0"
+                                           class="flex-1 px-4 py-2.5 text-sm outline-none font-bold"
+                                           style="color:#1e3a5f; border:none; background:transparent;" required>
+                                </div>
+                                @error('harga_guide')<p class="text-xs mt-1 text-red-500">{{ $message }}</p>@enderror
+                            </div>
+
                         </div>
-                        <p class="text-xs mt-1.5" style="color:rgba(30,58,95,0.4);">Tulis harga tanpa titik atau koma (contoh: 18000).</p>
-                        @error('harga')<p class="text-xs mt-1 text-red-500">{{ $message }}</p>@enderror
+                        <p class="text-xs mt-1.5" style="color:rgba(30,58,95,0.4);">Tulis harga tanpa titik atau koma (contoh: 18000). Harga guide biasanya lebih rendah dari harga normal.</p>
                     </div>
+
                 </div>
             </div>
 
