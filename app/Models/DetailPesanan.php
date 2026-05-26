@@ -16,7 +16,9 @@ protected $fillable = [
     'jumlah',
     'jumlah_awal', // ✅ tambahkan ini
     'subtotal',
-    'is_new'
+    'is_new',
+        'tipe_harga',   // ← tambah ini
+    'harga_pakai'  // ← tambah ini
 ];
 
 protected $attributes = [
