@@ -41,7 +41,6 @@ Route::post('/forgot-password/cek', [AuthController::class, 'cekUsername'])
 Route::post('/forgot-password/proses', [AuthController::class, 'prosesReset'])
     ->name('forgot.password.proses');
 
-
 /*
 |--------------------------------------------------------------------------
 | ADMIN
@@ -57,11 +56,9 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('menu', MenuController::class);
     Route::resource('meja', MejaController::class);
 
-    // Update status meja
     Route::get('/meja/status/{id}/{status}', [MejaController::class, 'updateStatus'])
         ->name('meja.status');
 
-    // Laporan
     Route::get('/laporan', [LaporanController::class, 'index'])
         ->name('laporan.index');
 
@@ -71,7 +68,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/laporan/cetak/{tanggal}', [LaporanController::class, 'cetak'])
         ->name('laporan.cetak');
 });
-
 
 /*
 |--------------------------------------------------------------------------
@@ -83,16 +79,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/kasir/dashboard', [KasirController::class, 'dashboard'])
         ->name('kasir.dashboard');
 
-    // Route kasir meja
     Route::get('/kasir/meja', [MejaController::class, 'indexKasir'])
         ->name('kasir.meja.index');
-
 
     /*
     |--------------------------------------------------------------------------
     | PESANAN
     |--------------------------------------------------------------------------
-    | Route pesanan dibuat manual agar tidak konflik dengan Route::resource.
     */
     Route::get('/pesanan', [PesananController::class, 'index'])
         ->name('pesanan.index');
@@ -112,44 +105,37 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/pesanan/{id}/detail', [PesananController::class, 'detail'])
         ->name('pesanan.detail');
 
-    // Halaman form bayar
     Route::get('/pesanan/{id}/bayar', [PesananController::class, 'showBayar'])
         ->name('pesanan.bayar');
 
-    // Proses bayar
     Route::post('/transaksi/{id}/proses', [PesananController::class, 'bayar'])
         ->name('transaksi.proses');
-
 
     /*
     |--------------------------------------------------------------------------
     | DAPUR / DETAIL PESANAN
     |--------------------------------------------------------------------------
     */
-Route::get('/dapur/{id}', [DetailPesananController::class, 'dapur'])
-    ->name('dapur.index');
+    Route::get('/dapur/{id}', [DetailPesananController::class, 'dapur'])
+        ->name('dapur.index');
 
-Route::post('/dapur/{id}/selesai', [DetailPesananController::class, 'selesai'])
-    ->name('dapur.selesai');
+    Route::post('/dapur/{id}/selesai', [DetailPesananController::class, 'selesai'])
+        ->name('dapur.selesai');
 
-// Tambahkan ini:
-Route::post('/dapur/{id}/cetak', [DetailPesananController::class, 'cetakDapur'])
-    ->name('dapur.cetak');
-
+    // Cetak dapur dibuat GET supaya bisa dibuka setelah simpan pesanan
+    Route::get('/dapur/{id}/cetak', [DetailPesananController::class, 'cetakDapur'])
+        ->name('dapur.cetak');
 
     /*
     |--------------------------------------------------------------------------
     | TRANSAKSI
     |--------------------------------------------------------------------------
-    | Route ini tetap disediakan kalau masih ada halaman lama yang memanggil
-    | transaksi.show atau transaksi.struk.
     */
     Route::get('/transaksi/{id}', [TransaksiController::class, 'show'])
         ->name('transaksi.show');
 
     Route::get('/transaksi/{id}/struk', [TransaksiController::class, 'struk'])
         ->name('transaksi.struk');
-
 
     /*
     |--------------------------------------------------------------------------

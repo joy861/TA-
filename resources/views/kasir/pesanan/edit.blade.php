@@ -681,19 +681,19 @@
         pesananGuide[card.dataset.id] = parseInt(card.querySelector('.qty-num').textContent);
     });
 
-    // Inject id_detail[] untuk detail yang sudah ada
-    @foreach($pesanan->detailPesanan as $d)
-        (function() {
-            const wrap = document.getElementById('hidden-inputs');
-            const hid  = document.createElement('input');
-            hid.type   = 'hidden';
-            hid.name   = 'id_detail[]';
-            hid.value  = '{{ $d->id_detail }}';
-            hid.dataset.forMenu   = '{{ $d->id_menu }}';
-            hid.dataset.tipeHarga = '{{ $d->tipe_harga ?? "normal" }}';
-            wrap.appendChild(hid);
-        })();
-    @endforeach
+    /*
+     * PENTING:
+     * Mapping id_detail lama berdasarkan tipe harga + id_menu.
+     * Tujuannya agar saat edit:
+     * - menu lama tetap membawa id_detail lama
+     * - menu baru mengirim id_detail kosong
+     * Kalau id_detail tidak sejajar, menu tambahan bisa salah terbaca sebagai menu lama.
+     */
+    const existingDetailIds = {
+        @foreach($pesanan->detailPesanan as $d)
+            '{{ ($d->tipe_harga ?? "normal") }}-{{ $d->id_menu }}': '{{ $d->id_detail }}',
+        @endforeach
+    };
 
     updateHidden();
     updateOrderBar();
@@ -740,11 +740,14 @@
         const wrap = document.getElementById('hidden-inputs');
 
         wrap.querySelectorAll(
-            'input[name="menu[]"], input[name="jumlah[]"], input[name="harga_pakai[]"], input[name="tipe_harga[]"]'
+            'input[name="id_detail[]"], input[name="menu[]"], input[name="jumlah[]"], input[name="harga_pakai[]"], input[name="tipe_harga[]"]'
         ).forEach(el => el.remove());
 
         Object.entries(pesananNormal).forEach(([id, qty]) => {
             const card = document.querySelector(`#grid-normal .menu-card[data-id="${id}"]`);
+            const idDetail = existingDetailIds[`normal-${id}`] || '';
+
+            appendHidden(wrap, 'id_detail[]',   idDetail);
             appendHidden(wrap, 'menu[]',        id);
             appendHidden(wrap, 'jumlah[]',      qty);
             appendHidden(wrap, 'harga_pakai[]', card.dataset.harga);
@@ -753,6 +756,9 @@
 
         Object.entries(pesananGuide).forEach(([id, qty]) => {
             const card = document.querySelector(`#grid-guide .menu-card-guide[data-id="${id}"]`);
+            const idDetail = existingDetailIds[`guide-${id}`] || '';
+
+            appendHidden(wrap, 'id_detail[]',   idDetail);
             appendHidden(wrap, 'menu[]',        id);
             appendHidden(wrap, 'jumlah[]',      qty);
             appendHidden(wrap, 'harga_pakai[]', card.dataset.harga);

@@ -10,6 +10,8 @@ use App\Models\Meja;
 use App\Models\Kategori;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use App\Services\ThermalPrinterService;
+use Illuminate\Support\Facades\Log;
 
 class PesananController extends Controller
 {
@@ -74,58 +76,72 @@ class PesananController extends Controller
         return view('kasir.pesanan.create', compact('menu', 'meja', 'kategori'));
     }
 
-    public function store(Request $request)
-    {
-        DB::beginTransaction();
+public function store(Request $request)
+{
+    $request->validate([
+        'id_meja' => 'required',
+        'menu'    => 'required|array|min:1',
+        'jumlah'  => 'required|array|min:1',
+    ], [
+        'id_meja.required' => 'Meja wajib dipilih.',
+        'menu.required'    => 'Minimal pilih 1 menu.',
+        'jumlah.required'  => 'Jumlah menu wajib diisi.',
+    ]);
 
-        try {
-            $pesanan = Pesanan::create([
-                'tanggal'     => date('Y-m-d'),
-                'id_meja'     => $request->id_meja,
-                'id_user'     => Auth::user()->id_user,
-                'total_harga' => 0,
-                'status'      => 'belum_bayar',
-                'is_new'      => 0,
+    DB::beginTransaction();
+
+    try {
+        $pesanan = Pesanan::create([
+    'tanggal'     => date('Y-m-d'),
+    'id_meja'     => $request->id_meja,
+    'id_user'     => Auth::user()->id_user,
+    'total_harga' => 0,
+    'status'      => 'belum_bayar',
+]);
+
+        $total = 0;
+
+        foreach ($request->menu as $key => $id_menu) {
+            $menu       = Menu::findOrFail($id_menu);
+            $jumlah     = (int) ($request->jumlah[$key] ?? 1);
+            $tipeHarga  = $request->tipe_harga[$key] ?? 'normal';
+            $hargaPakai = (int) ($request->harga_pakai[$key] ?? $menu->harga);
+            $subtotal   = $hargaPakai * $jumlah;
+
+            DetailPesanan::create([
+                'id_pesanan'  => $pesanan->id_pesanan,
+                'id_menu'     => $id_menu,
+                'jumlah'      => $jumlah,
+                'subtotal'    => $subtotal,
+                'tipe_harga'  => $tipeHarga,
+                'harga_pakai' => $hargaPakai,
+                'is_new'      => 1,
+                'jumlah_awal' => null,
             ]);
 
-            $total = 0;
-
-            foreach ($request->menu as $key => $id_menu) {
-                $menu       = Menu::findOrFail($id_menu);
-                $jumlah     = (int) $request->jumlah[$key];
-                $tipeHarga  = $request->tipe_harga[$key]  ?? 'normal';
-                $hargaPakai = (int) ($request->harga_pakai[$key] ?? $menu->harga);
-                $subtotal   = $hargaPakai * $jumlah;
-
-                DetailPesanan::create([
-                    'id_pesanan'  => $pesanan->id_pesanan,
-                    'id_menu'     => $id_menu,
-                    'jumlah'      => $jumlah,
-                    'subtotal'    => $subtotal,
-                    'tipe_harga'  => $tipeHarga,
-                    'harga_pakai' => $hargaPakai,
-                    'is_new'      => 0,
-                ]);
-
-                $total += $subtotal;
-            }
-
-            $pesanan->update(['total_harga' => $total]);
-
-            Meja::where('id_meja', $request->id_meja)
-                ->update(['status' => 'terisi']);
-
-            DB::commit();
-
-            return redirect()->route('pesanan.detail', $pesanan->id_pesanan)
-                ->with('success', 'Pesanan berhasil disimpan dan siap dicetak!');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            $total += $subtotal;
         }
-    }
 
+        $pesanan->update([
+            'total_harga' => $total,
+        ]);
+
+        Meja::where('id_meja', $request->id_meja)
+            ->update(['status' => 'terisi']);
+
+        DB::commit();
+
+        return redirect()->route('dapur.cetak', $pesanan->id_pesanan)
+            ->with('success', 'Pesanan berhasil disimpan dan siap dicetak ke dapur.');
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        return back()
+            ->withInput()
+            ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+    }
+}
     public function show($id)
     {
         $pesanan = Pesanan::with('detailPesanan.menu', 'meja')->findOrFail($id);
@@ -145,91 +161,149 @@ class PesananController extends Controller
     }
 
     public function update(Request $request, $id)
-    {
-        DB::beginTransaction();
+{
+    $request->validate([
+        'id_meja' => 'required',
+        'menu'    => 'required|array|min:1',
+        'jumlah'  => 'required|array|min:1',
+    ], [
+        'id_meja.required' => 'Meja wajib dipilih.',
+        'menu.required'    => 'Pesanan tidak boleh kosong, minimal 1 menu harus dipilih.',
+        'jumlah.required'  => 'Jumlah menu wajib diisi.',
+    ]);
 
-            try {
-        // ── Validasi: menu tidak boleh kosong ─────────────────
-        if (empty($request->menu)) {
-            DB::rollBack();
-            return back()->with('error', 'Pesanan tidak boleh kosong, minimal 1 menu harus dipilih.');
-        }
-            $pesanan         = Pesanan::findOrFail($id);
-            $oldMeja         = $pesanan->id_meja;
-            $total           = 0;
-            $existingDetails = DetailPesanan::where('id_pesanan', $id)->get();
-            $processedIds    = [];
+    DB::beginTransaction();
 
-            foreach ($request->menu as $key => $id_menu) {
-                $menu       = Menu::findOrFail($id_menu);
-                $jumlahBaru = (int) $request->jumlah[$key];
-                $tipeHarga  = $request->tipe_harga[$key]  ?? 'normal';
-                $hargaPakai = (int) ($request->harga_pakai[$key] ?? $menu->harga);
-                $id_detail  = $request->id_detail[$key]   ?? null;
+    try {
+        $pesanan = Pesanan::findOrFail($id);
+        $oldMeja = $pesanan->id_meja;
 
-                $detail = null;
-                if ($id_detail) {
-                    $detail = $existingDetails->firstWhere('id_detail', $id_detail);
-                }
+        $existingDetails = DetailPesanan::where('id_pesanan', $id)->get();
+        $processedIds = [];
+        $total = 0;
 
-                if ($detail) {
-                    $detail->update([
-                        'jumlah'      => $jumlahBaru,
-                        'subtotal'    => $hargaPakai * $jumlahBaru,
-                        'tipe_harga'  => $tipeHarga,
-                        'harga_pakai' => $hargaPakai,
-                        'jumlah_awal' => ($jumlahBaru != $detail->jumlah)
-                            ? $detail->jumlah
-                            : $detail->jumlah_awal,
-                    ]);
+        foreach ($request->menu as $key => $id_menu) {
+            $menu = Menu::findOrFail($id_menu);
 
-                    $processedIds[] = $detail->id_detail;
-                    $total          += $hargaPakai * $jumlahBaru;
+            $jumlahBaru = (int) ($request->jumlah[$key] ?? 1);
+            $tipeHarga = $request->tipe_harga[$key] ?? 'normal';
+            $hargaPakai = (int) ($request->harga_pakai[$key] ?? $menu->harga);
+            $subtotal = $hargaPakai * $jumlahBaru;
 
+            /*
+             * Penting:
+             * id_detail[] harus sejajar dengan menu[], jumlah[], harga_pakai[], tipe_harga[].
+             * File edit.blade.php yang baru sudah mengirim id_detail[] sesuai menu yang dipilih.
+             * Menu baru wajib mengirim id_detail kosong, supaya tidak dianggap mengganti menu lama.
+             */
+            $idDetail = $request->id_detail[$key] ?? null;
+            $detail = null;
+
+            if (!empty($idDetail)) {
+                $detail = $existingDetails->firstWhere('id_detail', (int) $idDetail);
+            }
+
+            if ($detail) {
+                $jumlahLama = (int) ($detail->jumlah ?? 0);
+                $menuLama = (int) ($detail->id_menu ?? 0);
+                $isNewLama = (int) ($detail->is_new ?? 0);
+
+                $menuBerubah = $menuLama !== (int) $id_menu;
+                $jumlahBertambah = $jumlahBaru > $jumlahLama;
+
+                if ($menuBerubah) {
+                    /*
+                     * Kalau baris lama berubah menu, anggap sebagai update baru untuk dapur.
+                     * Ini pengaman jika browser/DOM pernah mengirim id_detail yang tidak cocok.
+                     */
+                    $isNew = 1;
+                    $jumlahAwal = null;
+                } elseif ($isNewLama === 0 && $jumlahBertambah) {
+                    /*
+                     * Menu lama ditambah qty:
+                     * yang dikirim ke dapur hanya tambahan porsinya.
+                     */
+                    $isNew = 0;
+                    $jumlahAwal = $jumlahLama;
+                } elseif ($isNewLama === 1) {
+                    /*
+                     * Menu baru yang belum sempat dicetak ke dapur tetap menu baru.
+                     */
+                    $isNew = 1;
+                    $jumlahAwal = null;
                 } else {
-                    $new = DetailPesanan::create([
-                        'id_pesanan'  => $id,
-                        'id_menu'     => $id_menu,
-                        'jumlah'      => $jumlahBaru,
-                        'subtotal'    => $hargaPakai * $jumlahBaru,
-                        'tipe_harga'  => $tipeHarga,
-                        'harga_pakai' => $hargaPakai,
-                        'is_new'      => 1,
-                        'jumlah_awal' => null,
-                    ]);
-
-                    $processedIds[] = $new->id_detail;
-                    $total          += $hargaPakai * $jumlahBaru;
+                    /*
+                     * Menu lama tidak berubah / jumlah berkurang:
+                     * tidak perlu dikirim ulang ke dapur.
+                     */
+                    $isNew = 0;
+                    $jumlahAwal = null;
                 }
+
+                $detail->update([
+                    'id_menu'     => $id_menu,
+                    'jumlah'      => $jumlahBaru,
+                    'subtotal'    => $subtotal,
+                    'tipe_harga'  => $tipeHarga,
+                    'harga_pakai' => $hargaPakai,
+                    'is_new'      => $isNew,
+                    'jumlah_awal' => $jumlahAwal,
+                ]);
+
+                $processedIds[] = $detail->id_detail;
+            } else {
+                /*
+                 * Ini menu yang benar-benar baru ditambahkan saat edit.
+                 * Contoh: awal Ayam Goreng + Ayam Geprek,
+                 * lalu edit tambah Matcha 2x.
+                 * Maka Matcha masuk is_new = 1.
+                 */
+                $new = DetailPesanan::create([
+                    'id_pesanan'  => $id,
+                    'id_menu'     => $id_menu,
+                    'jumlah'      => $jumlahBaru,
+                    'subtotal'    => $subtotal,
+                    'tipe_harga'  => $tipeHarga,
+                    'harga_pakai' => $hargaPakai,
+                    'is_new'      => 1,
+                    'jumlah_awal' => null,
+                ]);
+
+                $processedIds[] = $new->id_detail;
             }
 
-            // Hapus detail yang tidak diproses
-            foreach ($existingDetails as $detail) {
-                if (!in_array($detail->id_detail, $processedIds)) {
-                    $detail->delete();
-                }
-            }
-
-            $pesanan->update([
-                'id_meja'     => $request->id_meja,
-                'total_harga' => $total,
-            ]);
-
-            if ($oldMeja != $request->id_meja) {
-                Meja::where('id_meja', $oldMeja)->update(['status' => 'kosong']);
-                Meja::where('id_meja', $request->id_meja)->update(['status' => 'terisi']);
-            }
-
-            DB::commit();
-
-            return redirect()->route('pesanan.index')
-                ->with('success', 'Pesanan berhasil diupdate!');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', $e->getMessage());
+            $total += $subtotal;
         }
+
+        foreach ($existingDetails as $detail) {
+            if (!in_array($detail->id_detail, $processedIds)) {
+                $detail->delete();
+            }
+        }
+
+        $pesanan->update([
+            'id_meja'     => $request->id_meja,
+            'total_harga' => $total,
+        ]);
+
+        if ($oldMeja != $request->id_meja) {
+            Meja::where('id_meja', $oldMeja)->update(['status' => 'kosong']);
+            Meja::where('id_meja', $request->id_meja)->update(['status' => 'terisi']);
+        }
+
+        DB::commit();
+
+        return redirect()->route('pesanan.index')
+            ->with('success', 'Pesanan berhasil diupdate.');
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        return back()
+            ->withInput()
+            ->with('error', 'Gagal update pesanan: ' . $e->getMessage());
     }
+}
 
     // ✅ GET — Tampilkan halaman form pembayaran
     public function showBayar($id)
@@ -239,60 +313,142 @@ class PesananController extends Controller
     }
 
     // ✅ POST — Proses pembayaran
-    public function bayar(Request $request, $id)
-    {
-        $request->validate([
-            'metode_pembayaran' => 'required|in:cash,qris,card',
-            'bayar'             => 'required|numeric|min:0',
+  public function bayar(Request $request, $id)
+{
+    $request->validate([
+        'metode_pembayaran' => 'required|in:cash,qris,card',
+        'bayar'             => 'required|numeric|min:0',
+    ]);
+
+    DB::beginTransaction();
+
+    try {
+        $pesanan = Pesanan::findOrFail($id);
+
+        if ($pesanan->status === 'sudah_bayar') {
+            DB::rollBack();
+
+            return redirect()->route('pesanan.index')
+                ->with('success', 'Pesanan ini sudah dibayar.');
+        }
+
+        // Subtotal dari total harga pesanan
+        $subtotal = (int) ($pesanan->total_harga ?? 0);
+
+        // Service / pajak 7%
+        $pajak = (int) round($subtotal * 0.07);
+
+        // Biaya card 2%, hanya kalau metode pembayaran card
+        $biayaCard = 0;
+
+        if ($request->metode_pembayaran === 'card') {
+            $biayaCard = (int) round(($subtotal + $pajak) * 0.02);
+        }
+
+        // Total akhir yang harus dibayar
+        $totalBayar = $subtotal + $pajak + $biayaCard;
+
+        // Validasi jumlah bayar
+        if ((int) $request->bayar < $totalBayar) {
+            DB::rollBack();
+
+            return back()->with(
+                'error',
+                'Jumlah bayar kurang. Total yang harus dibayar adalah Rp ' . number_format($totalBayar, 0, ',', '.')
+            );
+        }
+
+        // Kembalian dihitung dari total akhir
+        $kembalian = (int) $request->bayar - $totalBayar;
+
+        // Simpan pembayaran ke database
+        $pesanan->update([
+            'status'            => 'sudah_bayar',
+            'metode_pembayaran' => $request->metode_pembayaran,
+
+            // Ini yang dibutuhkan laporan admin
+            'pajak'             => $pajak,
+            'biaya_card'        => $biayaCard,
+            'total_bayar'       => $totalBayar,
+
+            // Data pembayaran
+            'bayar'             => (int) $request->bayar,
+            'kembalian'         => $kembalian,
         ]);
 
-        DB::beginTransaction();
+        // Meja kembali kosong setelah dibayar
+        Meja::where('id_meja', $pesanan->id_meja)
+            ->update(['status' => 'kosong']);
+
+        DB::commit();
+
+        // Ambil ulang data lengkap untuk cetak struk
+        $pesanan = Pesanan::with('detailPesanan.menu', 'meja', 'user')
+            ->findOrFail($id);
 
         try {
-            $pesanan = Pesanan::findOrFail($id);
+            app(ThermalPrinterService::class)->cetakStruk([
+                'id_pesanan' => $pesanan->id_pesanan,
+                'nama_meja'  => $pesanan->meja->nomor_meja ?? '-',
+                'waktu'      => $pesanan->created_at->timezone('Asia/Makassar')->format('d/m/Y H:i'),
+                'kasir'      => $pesanan->user->nama ?? '-',
+                'metode'     => strtoupper($pesanan->metode_pembayaran ?? 'CASH'),
 
-            if ($pesanan->status === 'sudah_bayar') {
-                DB::rollBack();
-                return redirect()->route('pesanan.index')
-                    ->with('success', 'Pesanan ini sudah dibayar.');
-            }
+                // Total pembayaran final
+                'total'      => $pesanan->total_bayar ?? $pesanan->total_harga,
+                'bayar'      => $pesanan->bayar ?? $pesanan->total_bayar,
+                'kembalian'  => $pesanan->kembalian ?? 0,
 
-            if ((int) $request->bayar < (int) $pesanan->total_harga) {
-                DB::rollBack();
-                return back()->with('error', 'Jumlah bayar kurang dari total pembayaran.');
-            }
+                'detail'     => $pesanan->detailPesanan->map(function ($item) {
+                    $harga = $item->harga_pakai ?? $item->menu->harga ?? 0;
 
-            $kembalian = (int) $request->bayar - (int) $pesanan->total_harga;
-
-            $pesanan->update([
-                'status'            => 'sudah_bayar',
-                'metode_pembayaran' => $request->metode_pembayaran,
-                'bayar'             => (int) $request->bayar,
-                'kembalian'         => $kembalian,
+                    return [
+                        'nama'     => $item->menu->nama_menu ?? '-',
+                        'jumlah'   => $item->jumlah ?? 0,
+                        'harga'    => $harga,
+                        'subtotal' => $item->subtotal ?? ($harga * $item->jumlah),
+                    ];
+                })->toArray(),
             ]);
 
-            Meja::where('id_meja', $pesanan->id_meja)
-                ->update(['status' => 'kosong']);
-
-            DB::commit();
-
-            return redirect()->route('struk.show', $id)
-                ->with('success', 'Pembayaran berhasil diproses!');
+            return redirect()->route('pesanan.index')
+                ->with('success', 'Pembayaran berhasil diproses dan struk berhasil dicetak.');
 
         } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', 'Gagal: ' . $e->getMessage());
+            Log::error('Cetak struk setelah bayar gagal: ' . $e->getMessage());
+
+            return redirect()->route('pesanan.index')
+                ->with('error', 'Pembayaran berhasil, tetapi cetak struk gagal: ' . $e->getMessage());
         }
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        return back()->with('error', 'Gagal: ' . $e->getMessage());
     }
+}
 
     public function detail($id)
-    {
-        $pesanan = Pesanan::with('detailPesanan.menu')->findOrFail($id);
+{
+    $pesanan = Pesanan::with(['meja', 'user', 'detailPesanan.menu'])
+        ->findOrFail($id);
 
-        $detailBaru      = $pesanan->detailPesanan->where('is_new', 1);
-        $detailTambahQty = $pesanan->detailPesanan->where('is_new', 0)->filter(fn($d) => !is_null($d->jumlah_awal));
-        $detailLama      = $pesanan->detailPesanan->where('is_new', 0)->filter(fn($d) => is_null($d->jumlah_awal));
+    $detailBaru = $pesanan->detailPesanan
+        ->where('is_new', 1);
 
-        return view('kasir.pesanan.detail', compact('pesanan', 'detailBaru', 'detailTambahQty', 'detailLama'));
-    }
+    $detailTambahQty = $pesanan->detailPesanan
+        ->where('is_new', 0)
+        ->filter(fn ($d) => !is_null($d->jumlah_awal));
+
+    $detailLama = $pesanan->detailPesanan
+        ->where('is_new', 0)
+        ->filter(fn ($d) => is_null($d->jumlah_awal));
+
+    return view('kasir.pesanan.detail', compact(
+        'pesanan',
+        'detailBaru',
+        'detailTambahQty',
+        'detailLama'
+    ));
+}
 }

@@ -20,7 +20,7 @@
             <div class="text-4xl font-black mt-2 leading-tight" style="color:#fff; letter-spacing:-1px;">
                 Rp {{ number_format($totalPendapatan, 0, ',', '.') }}
             </div>
-            <div class="text-xs mt-2 font-semibold" style="color:#60a5fa;">↑ dari total keseluruhan</div>
+            <div class="text-xs mt-2 font-semibold" style="color:#60a5fa;">pendapatan khusus hari ini</div>
         </div>
         <div>
             <div class="text-xs font-bold tracking-widest mb-3" style="color:rgba(255,255,255,0.3); letter-spacing:0.1em;">7 HARI TERAKHIR</div>
@@ -51,7 +51,7 @@
         <div class="text-xs font-bold tracking-widest" style="color:rgba(30,58,95,0.4); letter-spacing:0.12em;">TOTAL PESANAN</div>
         <div>
             <div class="text-4xl font-black leading-tight" style="color:#1e3a5f; letter-spacing:-1px;">{{ $totalPesanan }}</div>
-            <div class="text-xs font-semibold mt-1" style="color:rgba(30,58,95,0.4);">transaksi tercatat</div>
+           <div class="text-xs font-semibold mt-1" style="color:rgba(30,58,95,0.4);">transaksi hari ini</div>
         </div>
     </div>
 
@@ -67,14 +67,14 @@
                     <div class="w-2 h-2 rounded-sm" style="background:#60a5fa;"></div>
                     <span style="color:rgba(30,58,95,0.6);">Selesai</span>
                 </div>
-                <span class="font-bold" style="color:#1e3a5f;">{{ $totalPesanan }}</span>
+               <span class="font-bold" style="color:#1e3a5f;">{{ $totalSelesai }}</span>
             </div>
             <div class="flex items-center justify-between text-xs">
                 <div class="flex items-center gap-1.5">
                     <div class="w-2 h-2 rounded-sm" style="background:#e2e8f0;"></div>
                     <span style="color:rgba(30,58,95,0.6);">Pending</span>
                 </div>
-                <span class="font-bold" style="color:#1e3a5f;">0</span>
+               <span class="font-bold" style="color:#1e3a5f;">{{ $totalPending }}</span>
             </div>
         </div>
     </div>
@@ -85,8 +85,8 @@
 <div class="rounded-2xl overflow-hidden" style="background:#fff; border:1px solid rgba(30,58,95,0.08);">
     <div class="flex items-center justify-between px-6 py-4" style="border-bottom:1px solid rgba(30,58,95,0.06);">
         <div>
-            <h3 class="text-sm font-bold" style="color:#1e3a5f;">Pesanan Terbaru</h3>
-            <p class="text-xs mt-0.5" style="color:rgba(30,58,95,0.4);">Transaksi terakhir masuk</p>
+          <h3 class="text-sm font-bold" style="color:#1e3a5f;">Pesanan Hari Ini</h3>
+<p class="text-xs mt-0.5" style="color:rgba(30,58,95,0.4);">Transaksi terbaru pada tanggal hari ini</p>
         </div>
         <a href="{{ route('laporan.index') }}"
            class="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all"
@@ -114,7 +114,17 @@
                     onmouseout="this.style.background='transparent'">
                     <td class="px-6 py-3.5 text-xs font-mono" style="color:rgba(30,58,95,0.35);">#{{ $pesanan->id }}</td>
                     <td class="px-6 py-3.5 font-semibold" style="color:#1e3a5f;">Meja {{ $pesanan->meja->nomor_meja ?? '-' }}</td>
-                    <td class="px-6 py-3.5 font-bold" style="color:#1e3a5f;">Rp {{ number_format($pesanan->total_harga, 0, ',', '.') }}</td>
+                    @php
+    $subtotal = (int) ($pesanan->total_harga ?? 0);
+    $service = (int) ($pesanan->pajak ?? 0) + (int) ($pesanan->biaya_card ?? 0);
+    $totalFinal = (int) ($pesanan->total_bayar ?? 0);
+
+    if ($totalFinal <= 0) {
+        $totalFinal = $subtotal + $service;
+    }
+@endphp
+
+<td class="px-6 py-3.5 font-bold" style="color:#1e3a5f;">Rp {{ number_format($totalFinal, 0, ',', '.') }}</td>
                     <td class="px-6 py-3.5 text-xs" style="color:rgba(30,58,95,0.45);">{{ \Carbon\Carbon::parse($pesanan->created_at)->diffForHumans() }}</td>
                     <td class="px-6 py-3.5">
                         <span class="text-xs font-semibold px-2.5 py-1 rounded-lg"
@@ -125,7 +135,7 @@
                 <tr>
                     <td colspan="5" class="px-6 py-12 text-center text-sm" style="color:rgba(30,58,95,0.3);">
                         <i class="bi bi-inbox text-3xl block mb-2"></i>
-                        Belum ada transaksi
+                        Belum ada pesanan hari ini
                     </td>
                 </tr>
                 @endforelse

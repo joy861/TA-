@@ -2,183 +2,223 @@
 
 namespace App\Services;
 
-use Mike42\Escpos\Printer;
-use Mike42\Escpos\PrintConnectors\FilePrintConnector;
-use Mike42\Escpos\PrintConnectors\NetworkPrintConnector;
+use RuntimeException;
 
 class ThermalPrinterService
 {
-    protected string $device;
+    protected string $shareName;
 
     public function __construct()
     {
-        // Ganti dengan hasil ls /dev/usb* atau /dev/tty.usb* kamu
-        $this->device = config('printer.device', '/dev/usb/lp0');
-    }
-
-    protected function getConnector()
-    {
-        $device = $this->device;
-
-        if (preg_match('/^(tcp|network):\/\//i', $device)) {
-            $url = parse_url($device);
-            if (!isset($url['host']) || !isset($url['port'])) {
-                throw new \RuntimeException('Format network printer address tidak valid. Gunakan tcp://host:port.');
-            }
-            return new NetworkPrintConnector($url['host'], $url['port']);
-        }
-
-        if (strpos($device, ':') !== false && substr($device, 0, 1) !== '/') {
-            [$host, $port] = explode(':', $device, 2);
-            return new NetworkPrintConnector($host, (int) $port);
-        }
-
-        if (!file_exists($device) || !is_readable($device)) {
-            throw new \RuntimeException('Printer thermal tidak tersedia: ' . $device . '. Pastikan path device benar dan PHP punya izin membaca device.');
-        }
-
-        return new FilePrintConnector($device);
+        $this->shareName = config('printer.share_name', 'PrinterKampus');
     }
 
     public function cetakDapur(array $data): void
     {
-        $connector = $this->getConnector();
-        $printer   = new Printer($connector);
+        $tipeCetak = $data['tipe_cetak'] ?? 'awal';
 
-        try {
-            // === HEADER ===
-            $printer->setJustification(Printer::JUSTIFY_CENTER);
-            $printer->setEmphasis(true);
-            $printer->setTextSize(1, 1);
-            $printer->text("*** DAPUR ***\n");
-            $printer->setEmphasis(false);
-            $printer->text("PANDE HILL - Garden View\n");
-            $printer->text($this->garis('dashed') . "\n");
+        $pesananLama = $data['pesanan_lama'] ?? [];
+        $pesananBaru = $data['pesanan_baru'] ?? ($data['detail'] ?? []);
 
-            // === INFO ===
-            $printer->setJustification(Printer::JUSTIFY_LEFT);
-            $printer->text($this->kolom("No. Pesanan", "#" . $data['id_pesanan']) . "\n");
-            $printer->text($this->kolom("Meja", $data['nama_meja']) . "\n");
-            $printer->text($this->kolom("Waktu", $data['waktu']) . "\n");
-            $printer->text($this->garis('dashed') . "\n");
+        $text  = "";
+        $text .= $this->line("=") . "\n";
+        $text .= $this->center("ORDER DAPUR") . "\n";
+        $text .= $this->center("PANDE HILL") . "\n";
+        $text .= $this->line("=") . "\n";
+        $text .= $this->row("No. Pesanan", "#" . ($data['id_pesanan'] ?? '-')) . "\n";
+        $text .= $this->row("Meja", $data['nama_meja'] ?? '-') . "\n";
+        $text .= $this->row("Waktu", $data['waktu'] ?? '-') . "\n";
+        $text .= $this->row("Kasir", $data['kasir'] ?? '-') . "\n";
+        $text .= $this->line("-") . "\n";
 
-            // === MENU BARU ===
-            if (!empty($data['detail_baru'])) {
-                $printer->setJustification(Printer::JUSTIFY_CENTER);
-                $printer->setEmphasis(true);
-                $printer->setTextSize(1, 2); // tinggi 2x
-                $printer->text("!! MASAK SEKARANG !!\n");
-                $printer->setTextSize(1, 1);
-                $printer->setEmphasis(false);
-                $printer->setJustification(Printer::JUSTIFY_LEFT);
+        if ($tipeCetak === 'update') {
+            if (count($pesananLama) > 0) {
+                $text .= $this->center("PESANAN SEBELUMNYA") . "\n";
+                $text .= $this->center("INFO - JANGAN MASAK ULANG") . "\n";
+                $text .= $this->line("-") . "\n";
 
-                foreach ($data['detail_baru'] as $item) {
-                    $printer->setEmphasis(true);
-                    $printer->text($this->kolom(">> " . $item['nama'], $item['jumlah'] . "x") . "\n");
-                    $printer->setEmphasis(false);
+                foreach ($pesananLama as $item) {
+                    $text .= $this->printItemRingkas($item, false);
                 }
-                $printer->text($this->garis('line') . "\n");
             }
 
-            // === TAMBAH QTY ===
-            if (!empty($data['detail_tambah'])) {
-                $printer->setJustification(Printer::JUSTIFY_CENTER);
-                $printer->setEmphasis(true);
-                $printer->text("+ TAMBAH PORSI\n");
-                $printer->setEmphasis(false);
-                $printer->setJustification(Printer::JUSTIFY_LEFT);
+            $text .= $this->center("UPDATE PESANAN BARU") . "\n";
+            $text .= $this->center("PERLU DIMASAK SEKARANG") . "\n";
+            $text .= $this->line("-") . "\n";
 
-                foreach ($data['detail_tambah'] as $item) {
-                    $printer->text($this->kolom($item['nama'], "+" . $item['tambah'] . "x (total " . $item['jumlah'] . "x)") . "\n");
-                }
-                $printer->text($this->garis('line') . "\n");
+            foreach ($pesananBaru as $item) {
+                $text .= $this->printItemRingkas($item, true);
             }
 
-            // === SUDAH DIMASAK ===
-            if (!empty($data['detail_lama'])) {
-                $printer->setJustification(Printer::JUSTIFY_CENTER);
-                $printer->text("Sudah Dimasak\n");
-                $printer->setJustification(Printer::JUSTIFY_LEFT);
+            $text .= $this->line("=") . "\n";
+            $text .= $this->center("Mohon proses update") . "\n";
+            $text .= $this->center("pesanan dengan cepat") . "\n";
+            $text .= $this->line("=") . "\n";
+        } else {
+            // Pesanan awal setelah kasir input pertama kali
+            $text .= "DAFTAR PESANAN\n";
+            $text .= $this->line("-") . "\n";
 
-                foreach ($data['detail_lama'] as $item) {
-                    $printer->text($this->kolom($item['nama'], $item['jumlah'] . "x") . "\n");
-                }
-                $printer->text($this->garis('line') . "\n");
+            foreach ($pesananBaru as $item) {
+                $text .= $this->printItemAwal($item);
             }
 
-            // === FOOTER ===
-            $printer->setJustification(Printer::JUSTIFY_CENTER);
-            $printer->text($this->garis('dashed') . "\n");
-            $printer->text("- Selesaikan dengan cepat! -\n");
-            $printer->text(now()->timezone('Asia/Makassar')->format('H:i') . " WIT\n");
-
-            // === CUT ===
-            $printer->feed(3);
-            $printer->cut();
-
-        } finally {
-            $printer->close();
+            $text .= $this->line("=") . "\n";
+            $text .= $this->center("Mohon segera diproses") . "\n";
+            $text .= $this->line("=") . "\n";
         }
+
+        $text .= "\n\n\n";
+
+        $this->sendToWindowsPrinter($text, 'dapur_' . ($data['id_pesanan'] ?? time()) . '.txt');
     }
 
     public function cetakStruk(array $data): void
     {
-        $connector = $this->getConnector();
-        $printer   = new Printer($connector);
+        $text  = "";
+        $text .= $this->line("=") . "\n";
+        $text .= $this->center("PANDE HILL") . "\n";
+        $text .= $this->center("GARDEN VIEW") . "\n";
+        $text .= $this->center("STRUK PEMBAYARAN") . "\n";
+        $text .= $this->line("=") . "\n";
+        $text .= $this->row("No. Pesanan", "#" . ($data['id_pesanan'] ?? '-')) . "\n";
+        $text .= $this->row("Meja", $data['nama_meja'] ?? '-') . "\n";
+        $text .= $this->row("Kasir", $data['kasir'] ?? '-') . "\n";
+        $text .= $this->row("Waktu", $data['waktu'] ?? '-') . "\n";
+        $text .= $this->row("Metode", $data['metode'] ?? '-') . "\n";
+        $text .= $this->line("-") . "\n";
 
-        try {
-            $printer->setJustification(Printer::JUSTIFY_CENTER);
-            $printer->setEmphasis(true);
-            $printer->text("PANDE HILL GARDEN VIEW\n");
-            $printer->text("STRUK PEMBAYARAN\n");
-            $printer->setEmphasis(false);
-            $printer->text($this->garis('dashed') . "\n");
+        foreach (($data['detail'] ?? []) as $item) {
+            $nama     = $item['nama'] ?? '-';
+            $jumlah   = (int) ($item['jumlah'] ?? 0);
+            $harga    = (int) ($item['harga'] ?? 0);
+            $subtotal = (int) ($item['subtotal'] ?? 0);
 
-            $printer->setJustification(Printer::JUSTIFY_LEFT);
-            $printer->text($this->kolom("No. Pesanan", "#" . $data['id_pesanan']) . "\n");
-            $printer->text($this->kolom("Meja", $data['nama_meja']) . "\n");
-            $printer->text($this->kolom("Kasir", $data['kasir']) . "\n");
-            $printer->text($this->kolom("Waktu", $data['waktu']) . "\n");
-            $printer->text($this->kolom("Metode", $data['metode']) . "\n");
-            $printer->text($this->garis('dashed') . "\n");
+            $text .= $this->wrap($nama) . "\n";
+            $text .= $this->row(
+                $jumlah . "x Rp" . number_format($harga, 0, ',', '.'),
+                "Rp" . number_format($subtotal, 0, ',', '.')
+            ) . "\n";
+        }
 
-            foreach ($data['detail'] as $item) {
-                $printer->text($item['nama'] . "\n");
-                $printer->text($this->kolom($item['jumlah'] . 'x @ Rp' . number_format($item['harga'], 0, ',', '.'), 'Rp ' . number_format($item['subtotal'], 0, ',', '.')) . "\n");
-            }
+        $text .= $this->line("-") . "\n";
+        $text .= $this->row("TOTAL", "Rp" . number_format((int) ($data['total'] ?? 0), 0, ',', '.')) . "\n";
+        $text .= $this->row("BAYAR", "Rp" . number_format((int) ($data['bayar'] ?? 0), 0, ',', '.')) . "\n";
+        $text .= $this->row("KEMBALIAN", "Rp" . number_format((int) ($data['kembalian'] ?? 0), 0, ',', '.')) . "\n";
+        $text .= $this->line("=") . "\n";
+        $text .= $this->center("TERIMA KASIH") . "\n";
+        $text .= "\n\n\n";
 
-            $printer->text($this->garis('dashed') . "\n");
-            $printer->text($this->kolom("TOTAL", 'Rp ' . number_format($data['total'], 0, ',', '.')) . "\n");
-            $printer->text($this->kolom("BAYAR", 'Rp ' . number_format($data['bayar'], 0, ',', '.')) . "\n");
-            $printer->text($this->kolom("KEMBALIAN", 'Rp ' . number_format($data['kembalian'], 0, ',', '.')) . "\n");
-            $printer->text($this->garis('dashed') . "\n");
-            $printer->setJustification(Printer::JUSTIFY_CENTER);
-            $printer->text("TERIMA KASIH\n");
-            $printer->text("Sampai jumpa kembali!\n");
+        $this->sendToWindowsPrinter($text, 'struk_' . ($data['id_pesanan'] ?? time()) . '.txt');
+    }
 
-            $printer->feed(3);
-            $printer->cut();
+    private function printItemAwal(array $item): string
+    {
+        $nama   = $item['nama'] ?? '-';
+        $jumlah = (int) ($item['jumlah'] ?? 0);
+        $tipe   = strtoupper($item['tipe'] ?? 'NORMAL');
 
-        } finally {
-            $printer->close();
+        $text  = $this->wrap($nama) . "\n";
+        $text .= "Jumlah : {$jumlah}x\n";
+        $text .= "Tipe   : {$tipe}\n";
+        $text .= $this->line("-") . "\n";
+
+        return $text;
+    }
+
+    private function printItemRingkas(array $item, bool $showJenis = true): string
+    {
+        $nama   = $item['nama'] ?? '-';
+        $jumlah = (int) ($item['jumlah'] ?? 0);
+        $tipe   = strtoupper($item['tipe'] ?? 'NORMAL');
+        $jenis  = strtoupper($item['jenis'] ?? $item['status'] ?? 'BARU');
+
+        $text  = $this->row($nama, $jumlah . "x") . "\n";
+
+        if ($showJenis) {
+            $text .= "Jenis : {$jenis}\n";
+        }
+
+        $text .= "Tipe  : {$tipe}\n";
+        $text .= $this->line("-") . "\n";
+
+        return $text;
+    }
+
+    private function sendToWindowsPrinter(string $content, string $filename): void
+    {
+        if (PHP_OS_FAMILY !== 'Windows') {
+            throw new RuntimeException('Direct print ini hanya untuk Windows.');
+        }
+
+        $folder = storage_path('app/print_jobs');
+
+        if (!is_dir($folder)) {
+            mkdir($folder, 0777, true);
+        }
+
+        $filePath = $folder . DIRECTORY_SEPARATOR . $filename;
+
+        file_put_contents($filePath, $content);
+
+        $printerPath = '\\\\localhost\\' . $this->shareName;
+
+        $command = 'cmd /C copy /B '
+            . escapeshellarg($filePath)
+            . ' '
+            . escapeshellarg($printerPath)
+            . ' 2>&1';
+
+        exec($command, $output, $exitCode);
+
+        if ($exitCode !== 0) {
+            throw new RuntimeException(
+                'Gagal kirim ke printer. Pastikan printer sudah di-share dengan nama '
+                . $this->shareName
+                . '. Detail: '
+                . implode("\n", $output)
+            );
         }
     }
 
-    // Helper: baris 2 kolom (kiri & kanan), lebar 32 karakter
-    private function kolom(string $kiri, string $kanan, int $lebar = 32): string
+    private function line(string $char = '-', int $length = 32): string
     {
-        $sisa = $lebar - mb_strlen($kiri) - mb_strlen($kanan);
-        if ($sisa < 1) $sisa = 1;
-        return $kiri . str_repeat(' ', $sisa) . $kanan;
+        return str_repeat($char, $length);
     }
 
-    // Helper: garis pemisah
-    private function garis(string $tipe = 'dashed', int $lebar = 32): string
+    private function center(string $text, int $length = 32): string
     {
-        return match($tipe) {
-            'dashed' => str_repeat('-', $lebar),
-            'line'   => str_repeat('=', $lebar),
-            default  => str_repeat('-', $lebar),
-        };
+        $text = trim($text);
+
+        if (strlen($text) >= $length) {
+            return substr($text, 0, $length);
+        }
+
+        $left = floor(($length - strlen($text)) / 2);
+
+        return str_repeat(' ', $left) . $text;
+    }
+
+    private function row(string $left, string $right, int $length = 32): string
+    {
+        $left  = trim($left);
+        $right = trim($right);
+
+        if (strlen($left) > 22) {
+            $left = substr($left, 0, 22);
+        }
+
+        $space = $length - strlen($left) - strlen($right);
+
+        if ($space < 1) {
+            $space = 1;
+        }
+
+        return $left . str_repeat(' ', $space) . $right;
+    }
+
+    private function wrap(string $text, int $length = 32): string
+    {
+        return wordwrap(trim($text), $length, "\n", true);
     }
 }

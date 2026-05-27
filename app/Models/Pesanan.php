@@ -9,16 +9,19 @@ class Pesanan extends Model
     protected $table = 'pesanan';
     protected $primaryKey = 'id_pesanan';
 
-protected $fillable = [
-    'tanggal',
-    'id_meja',
-    'id_user',
-    'total_harga',
-    'status',
-    'metode_pembayaran',
-    'bayar',
-    'kembalian',
-];
+    protected $fillable = [
+        'tanggal',
+        'id_meja',
+        'id_user',
+        'total_harga',
+        'status',
+        'metode_pembayaran',
+        'pajak',
+        'biaya_card',
+        'total_bayar',
+        'bayar',
+        'kembalian',
+    ];
 
     public function meja()
     {

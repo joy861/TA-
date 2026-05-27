@@ -115,42 +115,48 @@
             </div>
 
             {{-- Password --}}
-            <div>
-                <div class="flex items-center justify-between mb-1.5">
-                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide">Password</label>
-                    {{-- ✅ LINK LUPA PASSWORD --}}
-                    <a href="{{ route('forgot.password') }}"
-                       class="text-xs font-medium transition-colors"
-                       style="color:#d4af37;"
-                       onmouseover="this.style.color='#b8941f'"
-                       onmouseout="this.style.color='#d4af37'">
-                        Lupa password?
-                    </a>
-                </div>
-                <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                        </svg>
-                    </div>
-                    <input type="password" name="password" id="passInput"
-                           placeholder="••••••••" required
-                           class="w-full border-[1.5px] border-slate-200 rounded-xl pl-9 pr-10 py-3 md:py-2.5 text-sm text-slate-800 placeholder-slate-300 outline-none transition-all"
-                           style="font-family:'DM Sans',sans-serif;"
-                           onfocus="this.style.borderColor='#d4af37';this.style.boxShadow='0 0 0 3px rgba(212,175,55,0.12)'"
-                           onblur="this.style.borderColor='#e2e8f0';this.style.boxShadow='none'">
-                    <button type="button" onclick="togglePass()"
-                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors">
-                        <svg id="eyeIco" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                        </svg>
-                    </button>
-                </div>
-            </div>
+<div>
+    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+        Password
+    </label>
+
+    <div class="relative">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+            </svg>
+        </div>
+
+        <input type="password" name="password" id="passInput"
+               placeholder="••••••••" required
+               class="w-full border-[1.5px] border-slate-200 rounded-xl pl-9 pr-10 py-3 md:py-2.5 text-sm text-slate-800 placeholder-slate-300 outline-none transition-all"
+               style="font-family:'DM Sans',sans-serif;"
+               onfocus="this.style.borderColor='#d4af37';this.style.boxShadow='0 0 0 3px rgba(212,175,55,0.12)'"
+               onblur="this.style.borderColor='#e2e8f0';this.style.boxShadow='none'">
+
+        <button type="button" onclick="togglePass()"
+                class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors">
+            <svg id="eyeIco" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+            </svg>
+        </button>
+    </div>
+
+    {{-- Link lupa password dipindah ke bawah input --}}
+    <div class="flex justify-end mt-2">
+        <a href="{{ route('forgot.password') }}"
+           class="text-xs font-semibold transition-colors"
+           style="color:#d4af37;"
+           onmouseover="this.style.color='#b8941f'"
+           onmouseout="this.style.color='#d4af37'">
+            Lupa password?
+        </a>
+    </div>
+</div>
 
             {{-- Submit --}}
             <button type="submit"

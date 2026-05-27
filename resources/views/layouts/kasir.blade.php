@@ -428,6 +428,137 @@
             color: #b91c1c;
         }
 
+        .kasir-toast-container {
+            position: fixed;
+            top: 86px;
+            left: 18px;
+            z-index: 100000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: min(380px, calc(100vw - 36px));
+            pointer-events: none;
+        }
+
+        .kasir-toast {
+            pointer-events: auto;
+            display: grid;
+            grid-template-columns: 34px 1fr auto;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 14px;
+            border-radius: 16px;
+            background: #ffffff;
+            border: 1px solid rgba(226, 232, 240, 0.95);
+            box-shadow: 0 18px 45px rgba(8, 20, 43, 0.18);
+            transform: translateX(-18px);
+            opacity: 0;
+            animation: kasirToastIn 0.35s ease forwards;
+        }
+
+        .kasir-toast.hide {
+            animation: kasirToastOut 0.35s ease forwards;
+        }
+
+        .kasir-toast-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 15px;
+        }
+
+        .kasir-toast-title {
+            font-size: 13px;
+            font-weight: 900;
+            color: #1e3a5f;
+            line-height: 1.25;
+            margin-bottom: 3px;
+        }
+
+        .kasir-toast-message {
+            font-size: 12px;
+            font-weight: 650;
+            color: rgba(30,58,95,0.6);
+            line-height: 1.45;
+        }
+
+        .kasir-toast-close {
+            width: 26px;
+            height: 26px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: rgba(30,58,95,0.35);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .kasir-toast-close:hover {
+            background: rgba(30,58,95,0.06);
+            color: #1e3a5f;
+        }
+
+        .kasir-toast-success {
+            border-left: 5px solid #16a34a;
+        }
+
+        .kasir-toast-success .kasir-toast-icon {
+            background: rgba(34,197,94,0.12);
+            color: #16a34a;
+        }
+
+        .kasir-toast-error {
+            border-left: 5px solid #ef4444;
+        }
+
+        .kasir-toast-error .kasir-toast-icon {
+            background: rgba(239,68,68,0.12);
+            color: #dc2626;
+        }
+
+        @keyframes kasirToastIn {
+            from {
+                transform: translateX(-18px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes kasirToastOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(-18px);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .kasir-toast-container {
+                top: 78px;
+                left: 12px;
+                width: calc(100vw - 24px);
+            }
+
+            .kasir-toast {
+                grid-template-columns: 32px 1fr auto;
+                padding: 13px;
+            }
+        }
+
+
         .kasir-mini-list-item + .kasir-mini-list-item {
             border-top: 1px solid rgba(30,58,95,0.06);
         }
@@ -764,30 +895,55 @@
 </header>
 
 <main class="max-w-7xl mx-auto px-4 md:px-7 py-7 md:py-9">
+    @yield('content')
+</main>
 
+<div id="kasirToastContainer" class="kasir-toast-container">
     @if(session('success'))
-        <div class="kasir-alert kasir-alert-success">
-            <i class="bi bi-check-circle-fill"></i>
-            <span>{{ session('success') }}</span>
+        <div class="kasir-toast kasir-toast-success" data-toast>
+            <div class="kasir-toast-icon">
+                <i class="bi bi-check-circle-fill"></i>
+            </div>
+            <div>
+                <div class="kasir-toast-title">Berhasil</div>
+                <div class="kasir-toast-message">{{ session('success') }}</div>
+            </div>
+            <button type="button" class="kasir-toast-close" onclick="dismissKasirToast(this.closest('.kasir-toast'))">
+                <i class="bi bi-x-lg"></i>
+            </button>
         </div>
     @endif
 
     @if(session('error'))
-        <div class="kasir-alert kasir-alert-error">
-            <i class="bi bi-exclamation-circle-fill"></i>
-            <span>{{ session('error') }}</span>
+        <div class="kasir-toast kasir-toast-error" data-toast>
+            <div class="kasir-toast-icon">
+                <i class="bi bi-exclamation-circle-fill"></i>
+            </div>
+            <div>
+                <div class="kasir-toast-title">Terjadi Kesalahan</div>
+                <div class="kasir-toast-message">{{ session('error') }}</div>
+            </div>
+            <button type="button" class="kasir-toast-close" onclick="dismissKasirToast(this.closest('.kasir-toast'))">
+                <i class="bi bi-x-lg"></i>
+            </button>
         </div>
     @endif
 
     @if($errors->any())
-        <div class="kasir-alert kasir-alert-error">
-            <i class="bi bi-exclamation-circle-fill"></i>
-            <span>{{ $errors->first() }}</span>
+        <div class="kasir-toast kasir-toast-error" data-toast>
+            <div class="kasir-toast-icon">
+                <i class="bi bi-exclamation-circle-fill"></i>
+            </div>
+            <div>
+                <div class="kasir-toast-title">Validasi Gagal</div>
+                <div class="kasir-toast-message">{{ $errors->first() }}</div>
+            </div>
+            <button type="button" class="kasir-toast-close" onclick="dismissKasirToast(this.closest('.kasir-toast'))">
+                <i class="bi bi-x-lg"></i>
+            </button>
         </div>
     @endif
-
-    @yield('content')
-</main>
+</div>
 
 <div id="logoutConfirmModal" class="logout-modal-overlay">
     <div id="logoutConfirmBox" class="logout-modal-box">
@@ -858,19 +1014,26 @@
         }
     }
 
+    function dismissKasirToast(toast) {
+        if (!toast || toast.dataset.closing === '1') {
+            return;
+        }
+
+        toast.dataset.closing = '1';
+        toast.classList.add('hide');
+
+        setTimeout(function () {
+            toast.remove();
+        }, 350);
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
-        const alerts = document.querySelectorAll('.kasir-alert');
+        const toasts = document.querySelectorAll('[data-toast]');
 
-        alerts.forEach(function(alert) {
+        toasts.forEach(function(toast) {
             setTimeout(function() {
-                alert.style.transition = 'all 0.35s ease';
-                alert.style.opacity = '0';
-                alert.style.transform = 'translateY(-8px)';
-
-                setTimeout(function() {
-                    alert.remove();
-                }, 350);
-            }, 3500);
+                dismissKasirToast(toast);
+            }, 4500);
         });
 
         const logoutModal = document.getElementById('logoutConfirmModal');
