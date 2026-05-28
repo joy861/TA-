@@ -55,12 +55,22 @@ class PesananController extends Controller
         }
 
         // ── Filter pencarian meja ─────────────────────────────────
-        if ($request->search) {
-            $search = preg_replace('/[^0-9a-zA-Z]/', '', $request->search);
-            $query->whereHas('meja', function ($q) use ($search) {
-                $q->where('nomor_meja', 'like', "%{$search}%");
-            });
-        }
+if ($request->filled('search')) {
+    $searchAsli = trim($request->search);
+
+    // Ambil angka dari input.
+    // Contoh:
+    // "meja 2"  => "2"
+    // "Meja 10" => "10"
+    // "2"       => "2"
+    preg_match('/\d+/', $searchAsli, $angka);
+
+    $nomorMeja = $angka[0] ?? $searchAsli;
+
+    $query->whereHas('meja', function ($q) use ($nomorMeja) {
+        $q->where('nomor_meja', 'like', "%{$nomorMeja}%");
+    });
+}
 
         $pesanans = $query->get();
 

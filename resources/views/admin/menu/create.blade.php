@@ -11,7 +11,7 @@
         <i class="bi bi-arrow-left"></i> Kembali ke Daftar Menu
     </a>
 
-    <form action="{{ route('menu.store') }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ route('menu.store') }}" method="POST">
         @csrf
         <div class="bg-white rounded-2xl overflow-hidden" style="border:1px solid rgba(30,58,95,0.08);">
 
@@ -108,26 +108,6 @@
                 </div>
             </div>
 
-            <div class="px-7 py-6" style="border-top:1px solid rgba(30,58,95,0.04);">
-                <p class="text-xs font-bold tracking-widest uppercase mb-4" style="color:#60a5fa; letter-spacing:0.15em;">FOTO MENU</p>
-                <label for="foto" class="block cursor-pointer rounded-xl p-6 text-center transition-all"
-                       style="border:2px dashed rgba(30,58,95,0.15); background:#eef2ff;"
-                       onmouseover="this.style.borderColor='#60a5fa';this.style.background='rgba(96,165,250,0.08)'"
-                       onmouseout="this.style.borderColor='rgba(30,58,95,0.15)';this.style.background='#eef2ff'">
-                    <i class="bi bi-cloud-arrow-up text-3xl mb-2 block" style="color:rgba(30,58,95,0.3);"></i>
-                    <p class="text-sm font-semibold" style="color:rgba(30,58,95,0.6);">
-                        <strong style="color:#1e3a5f;">Klik untuk pilih foto</strong> atau drag & drop
-                    </p>
-                    <p class="text-xs mt-1" style="color:rgba(30,58,95,0.4);">PNG, JPG, JPEG (Maks. 2MB)</p>
-                    <input type="file" id="foto" name="foto" accept="image/*" class="hidden" onchange="previewFoto(event)">
-                </label>
-                <div id="fotoPreview" class="hidden mt-3 text-center">
-                    <img id="fotoPreviewImg" src="" alt="Preview" class="max-w-[160px] max-h-[160px] rounded-xl mx-auto"
-                         style="border:2px solid rgba(30,58,95,0.1);">
-                </div>
-                @error('foto')<p class="text-xs mt-1 text-red-500">{{ $message }}</p>@enderror
-            </div>
-
             <div class="flex justify-end gap-3 px-7 py-4" style="background:rgba(30,58,95,0.02); border-top:1px solid rgba(30,58,95,0.06);">
                 <a href="{{ route('menu.index') }}"
                    class="inline-flex items-center gap-2 text-sm font-semibold px-5 py-2.5 rounded-xl"
@@ -146,17 +126,4 @@
     </form>
 </div>
 
-<script>
-    function previewFoto(event) {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = e => {
-                document.getElementById('fotoPreviewImg').src = e.target.result;
-                document.getElementById('fotoPreview').classList.remove('hidden');
-            };
-            reader.readAsDataURL(file);
-        }
-    }
-</script>
 @endsection

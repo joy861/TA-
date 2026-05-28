@@ -563,8 +563,153 @@
             border-top: 1px solid rgba(30,58,95,0.06);
         }
 
-        .kasir-mobile-nav {
+        .kasir-mobile-actions {
             display: none;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .kasir-menu-toggle {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.06);
+            color: #ffffff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .kasir-menu-toggle:hover {
+            background: rgba(255,255,255,0.12);
+        }
+
+        .kasir-menu-toggle.active {
+            background: #ffffff;
+            color: #1e3a5f;
+        }
+
+        .kasir-mobile-user-summary {
+            max-width: 210px;
+        }
+
+        .kasir-mobile-backdrop {
+            position: fixed;
+            inset: 68px 0 0 0;
+            background: rgba(8,20,43,0.14);
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: all 0.2s ease;
+            z-index: 45;
+        }
+
+        .kasir-mobile-backdrop.show {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        .kasir-mobile-menu {
+            position: fixed;
+            top: 78px;
+            right: 16px;
+            width: min(315px, calc(100vw - 32px));
+            background: #ffffff;
+            border: 1px solid rgba(226,232,240,0.95);
+            border-radius: 22px;
+            padding: 12px;
+            box-shadow: 0 24px 70px rgba(8,20,43,0.22);
+            z-index: 60;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transform: translateY(-10px) scale(0.98);
+            transition: all 0.2s ease;
+        }
+
+        .kasir-mobile-menu.show {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transform: translateY(0) scale(1);
+        }
+
+        .kasir-mobile-menu-head {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 8px 12px;
+        }
+
+        .kasir-mobile-menu-name {
+            color: #1e3a5f;
+            font-size: 13px;
+            font-weight: 900;
+            line-height: 1.25;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .kasir-mobile-menu-role {
+            color: rgba(30,58,95,0.45);
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: capitalize;
+        }
+
+        .kasir-mobile-menu-divider {
+            height: 1px;
+            background: rgba(30,58,95,0.08);
+            margin: 6px 4px;
+        }
+
+        .kasir-mobile-menu-item {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 12px;
+            border-radius: 14px;
+            text-decoration: none;
+            border: none;
+            background: transparent;
+            color: #1e3a5f;
+            font-size: 13px;
+            font-weight: 850;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            text-align: left;
+        }
+
+        .kasir-mobile-menu-item i {
+            width: 20px;
+            text-align: center;
+            font-size: 15px;
+            color: #60a5fa;
+        }
+
+        .kasir-mobile-menu-item:hover,
+        .kasir-mobile-menu-item.active {
+            background: #eef2ff;
+        }
+
+        .kasir-mobile-menu-item.danger {
+            color: #dc2626;
+        }
+
+        .kasir-mobile-menu-item.danger i {
+            color: #dc2626;
+        }
+
+        .kasir-mobile-menu-item.danger:hover {
+            background: #fff1f2;
         }
 
         .logout-modal-overlay {
@@ -705,8 +850,8 @@
                 display: none !important;
             }
 
-            .kasir-mobile-nav {
-                display: block;
+            .kasir-mobile-actions {
+                display: flex;
             }
         }
 
@@ -797,8 +942,8 @@
 
             <a href="{{ $dashboardUrl }}" class="flex items-center gap-3 no-underline flex-shrink-0">
                 <div class="kasir-brand-logo">
-    <img src="{{ asset('images/logo.png') }}" alt="Pande Hill Logo">
-</div>
+                    <img src="{{ asset('images/logo.png') }}" alt="Pande Hill Logo">
+                </div>
                 <div class="hidden sm:block">
                     <div class="kasir-brand-title text-[15px]">Pande Hill</div>
                     <div class="kasir-brand-subtitle">Kasir Panel</div>
@@ -822,7 +967,8 @@
                 </a>
             </nav>
 
-            <div class="hidden md:flex items-center gap-2 flex-shrink-0">
+            {{-- Desktop: user + logout hanya tampil di layar besar --}}
+            <div class="hidden lg:flex items-center gap-2 flex-shrink-0">
                 <div class="kasir-user-chip">
                     <div class="kasir-user-avatar">{{ $userInitial }}</div>
                     <div class="min-w-0 pr-2">
@@ -847,52 +993,70 @@
                 </form>
             </div>
 
-            <button class="lg:hidden text-white text-xl" onclick="toggleMobileNav()" style="background:none; border:none;">
-                <i class="bi bi-list"></i>
-            </button>
-        </div>
-
-        <div id="mobileNav" class="kasir-mobile-nav lg:hidden pb-4" style="display:none;">
-            <div class="flex gap-2 overflow-x-auto pb-2">
-                <a href="{{ $dashboardUrl }}" class="kasir-nav-link {{ $dashboardActive ? 'active' : '' }}">
-                    <i class="bi bi-speedometer2"></i>
-                    <span>Dashboard</span>
-                </a>
-
-                <a href="{{ $inputPesananUrl }}" class="kasir-nav-link {{ $inputActive ? 'active' : '' }}">
-                    <i class="bi bi-plus-circle"></i>
-                    <span>Input</span>
-                </a>
-
-                <a href="{{ $dataPesananUrl }}" class="kasir-nav-link {{ $dataPesananActive ? 'active' : '' }}">
-                    <i class="bi bi-receipt"></i>
-                    <span>Data Pesanan</span>
-                </a>
-            </div>
-
-            <div class="flex items-center justify-between mt-3 gap-3">
-                <div class="kasir-user-chip flex-1">
+            {{-- Tablet/Mobile: hanya user ringkas + tombol menu. Tidak mendorong halaman ke bawah --}}
+            <div class="kasir-mobile-actions lg:hidden">
+                <div class="kasir-user-chip kasir-mobile-user-summary hidden sm:inline-flex">
                     <div class="kasir-user-avatar">{{ $userInitial }}</div>
                     <div class="min-w-0 pr-2">
-                        <div class="text-xs font-bold text-white truncate">{{ $userNama }}</div>
-                        <div class="text-[10px] capitalize" style="color:rgba(255,255,255,0.4);">
+                        <div class="text-xs font-bold text-white truncate leading-tight">{{ $userNama }}</div>
+                        <div class="text-[10px] truncate capitalize" style="color:rgba(255,255,255,0.4);">
                             {{ $userRole }}
                         </div>
                     </div>
                 </div>
 
-                <form action="{{ $logoutUrl }}" method="POST" class="m-0 logout-form">
-                    @csrf
-                    <button type="button"
-                            class="kasir-btn kasir-btn-outline !h-[38px]"
-                            onclick="openLogoutModal(this)">
-                        <i class="bi bi-box-arrow-right"></i>
-                    </button>
-                </form>
+                <button id="mobileMenuButton"
+                        type="button"
+                        class="kasir-menu-toggle"
+                        onclick="toggleMobileMenu()"
+                        aria-label="Buka menu kasir"
+                        aria-expanded="false">
+                    <i class="bi bi-list"></i>
+                </button>
             </div>
         </div>
     </div>
 </header>
+
+{{-- Dropdown mobile/tablet. Posisi fixed, jadi tidak menurunkan isi halaman --}}
+<div id="mobileMenuBackdrop" class="kasir-mobile-backdrop lg:hidden" onclick="closeMobileMenu()"></div>
+
+<div id="mobileMenu" class="kasir-mobile-menu lg:hidden" aria-hidden="true">
+    <div class="kasir-mobile-menu-head">
+        <div class="kasir-user-avatar">{{ $userInitial }}</div>
+        <div class="min-w-0">
+            <div class="kasir-mobile-menu-name">{{ $userNama }}</div>
+            <div class="kasir-mobile-menu-role">{{ $userRole }}</div>
+        </div>
+    </div>
+
+    <div class="kasir-mobile-menu-divider"></div>
+
+    <a href="{{ $dashboardUrl }}" class="kasir-mobile-menu-item {{ $dashboardActive ? 'active' : '' }}">
+        <i class="bi bi-speedometer2"></i>
+        <span>Dashboard</span>
+    </a>
+
+    <a href="{{ $inputPesananUrl }}" class="kasir-mobile-menu-item {{ $inputActive ? 'active' : '' }}">
+        <i class="bi bi-plus-circle"></i>
+        <span>Input Pesanan</span>
+    </a>
+
+    <a href="{{ $dataPesananUrl }}" class="kasir-mobile-menu-item {{ $dataPesananActive ? 'active' : '' }}">
+        <i class="bi bi-receipt"></i>
+        <span>Data Pesanan</span>
+    </a>
+
+    <div class="kasir-mobile-menu-divider"></div>
+
+    <form action="{{ $logoutUrl }}" method="POST" class="m-0 logout-form">
+        @csrf
+        <button type="button" class="kasir-mobile-menu-item danger w-full" onclick="openLogoutModal(this)">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Logout</span>
+        </button>
+    </form>
+</div>
 
 <main class="max-w-7xl mx-auto px-4 md:px-7 py-7 md:py-9">
     @yield('content')
@@ -976,17 +1140,59 @@
 <script>
     let selectedLogoutForm = null;
 
-    function toggleMobileNav() {
-        const nav = document.getElementById('mobileNav');
+    function toggleMobileMenu() {
+        const menu = document.getElementById('mobileMenu');
+        const backdrop = document.getElementById('mobileMenuBackdrop');
+        const button = document.getElementById('mobileMenuButton');
 
-        if (!nav) {
+        if (!menu || !backdrop || !button) {
             return;
         }
 
-        nav.style.display = nav.style.display === 'none' || nav.style.display === '' ? 'block' : 'none';
+        const isOpen = menu.classList.contains('show');
+
+        if (isOpen) {
+            closeMobileMenu();
+        } else {
+            openMobileMenu();
+        }
     }
 
-    function openLogoutModal(button) {
+    function openMobileMenu() {
+        const menu = document.getElementById('mobileMenu');
+        const backdrop = document.getElementById('mobileMenuBackdrop');
+        const button = document.getElementById('mobileMenuButton');
+
+        if (!menu || !backdrop || !button) {
+            return;
+        }
+
+        menu.classList.add('show');
+        backdrop.classList.add('show');
+        button.classList.add('active');
+        button.setAttribute('aria-expanded', 'true');
+        menu.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeMobileMenu() {
+        const menu = document.getElementById('mobileMenu');
+        const backdrop = document.getElementById('mobileMenuBackdrop');
+        const button = document.getElementById('mobileMenuButton');
+
+        if (!menu || !backdrop || !button) {
+            return;
+        }
+
+        menu.classList.remove('show');
+        backdrop.classList.remove('show');
+        button.classList.remove('active');
+        button.setAttribute('aria-expanded', 'false');
+        menu.setAttribute('aria-hidden', 'true');
+    }
+
+        function openLogoutModal(button) {
+        closeMobileMenu();
+
         selectedLogoutForm = button.closest('form');
 
         const modal = document.getElementById('logoutConfirmModal');
@@ -1049,6 +1255,7 @@
 
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
+            closeMobileMenu();
             closeLogoutModal();
         }
     });

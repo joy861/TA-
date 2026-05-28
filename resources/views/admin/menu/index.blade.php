@@ -51,7 +51,6 @@
             <thead>
                 <tr style="background:rgba(30,58,95,0.02); border-bottom:1px solid rgba(30,58,95,0.06);">
                     <th class="text-left px-5 py-3 text-xs font-bold tracking-widest uppercase w-12" style="color:rgba(30,58,95,0.35);">No</th>
-                    <th class="text-left px-5 py-3 text-xs font-bold tracking-widest uppercase w-16" style="color:rgba(30,58,95,0.35);">Foto</th>
                     <th class="text-left px-5 py-3 text-xs font-bold tracking-widest uppercase" style="color:rgba(30,58,95,0.35);">Nama Menu</th>
                     <th class="text-left px-5 py-3 text-xs font-bold tracking-widest uppercase" style="color:rgba(30,58,95,0.35);">Kategori</th>
                     <th class="text-left px-5 py-3 text-xs font-bold tracking-widest uppercase" style="color:rgba(30,58,95,0.35);">Harga Normal</th>
@@ -66,18 +65,6 @@
                     onmouseover="this.style.background='rgba(30,58,95,0.02)'"
                     onmouseout="this.style.background='transparent'">
                     <td class="px-5 py-3.5 text-xs" style="color:rgba(30,58,95,0.35);">{{ $loop->iteration }}</td>
-                    <td class="px-5 py-3.5">
-                        @if($m->foto)
-                            <img src="{{ asset('storage/'.$m->foto) }}" alt="{{ $m->nama_menu }}"
-                                 class="w-11 h-11 rounded-xl object-cover"
-                                 style="border:2px solid rgba(30,58,95,0.08);">
-                        @else
-                            <div class="w-11 h-11 rounded-xl flex items-center justify-center"
-                                 style="background:#eef2ff;">
-                                <i class="bi bi-image text-sm" style="color:rgba(30,58,95,0.3);"></i>
-                            </div>
-                        @endif
-                    </td>
                     <td class="px-5 py-3.5 font-bold capitalize" style="color:#1e3a5f;">{{ $m->nama_menu }}</td>
                     <td class="px-5 py-3.5 text-xs font-semibold capitalize" style="color:rgba(30,58,95,0.5);">{{ $m->kategori->nama_kategori ?? '-' }}</td>
 
@@ -135,7 +122,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="8" class="px-5 py-12 text-center text-sm" style="color:rgba(30,58,95,0.3);">
+                    <td colspan="7" class="px-5 py-12 text-center text-sm" style="color:rgba(30,58,95,0.3);">
                         <i class="bi bi-journal-text text-3xl block mb-2"></i>
                         Belum ada menu. Klik "Tambah Menu" untuk mulai.
                     </td>
