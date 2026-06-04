@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Cetak Laporan - {{ $tanggal }}</title>
+    <title>Cetak Laporan - {{ $periodeLabel ?? $tanggal }}</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 
@@ -279,7 +279,7 @@
 
         <div class="header-right">
             <h2>Laporan Penjualan</h2>
-            <p>Tanggal: {{ \Carbon\Carbon::parse($tanggal)->locale('id')->isoFormat('D MMMM YYYY') }}</p>
+            <p>Periode: {{ $periodeLabel ?? \Carbon\Carbon::parse($tanggal)->locale('id')->isoFormat('D MMMM YYYY') }}</p>
             <p>Dicetak: {{ \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM YYYY, HH:mm') }}</p>
         </div>
     </div>
@@ -289,7 +289,7 @@
         <div class="summary-box">
             <div class="summary-label">Total Transaksi</div>
             <div class="summary-value">{{ $totalTransaksi }}</div>
-            <div class="summary-sub">transaksi</div>
+            <div class="summary-sub">transaksi pada periode</div>
         </div>
 
         <div class="summary-box dark">

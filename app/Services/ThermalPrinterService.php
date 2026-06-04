@@ -101,10 +101,25 @@ class ThermalPrinterService
             ) . "\n";
         }
 
+        $subtotal  = (int) ($data['subtotal'] ?? 0);
+        $service   = (int) ($data['service'] ?? 0);
+        $biayaCard = (int) ($data['biaya_card'] ?? 0);
+        $total     = (int) ($data['total'] ?? 0);
+        $bayar     = (int) ($data['bayar'] ?? 0);
+        $kembalian = (int) ($data['kembalian'] ?? 0);
+
         $text .= $this->line("-") . "\n";
-        $text .= $this->row("TOTAL", "Rp" . number_format((int) ($data['total'] ?? 0), 0, ',', '.')) . "\n";
-        $text .= $this->row("BAYAR", "Rp" . number_format((int) ($data['bayar'] ?? 0), 0, ',', '.')) . "\n";
-        $text .= $this->row("KEMBALIAN", "Rp" . number_format((int) ($data['kembalian'] ?? 0), 0, ',', '.')) . "\n";
+        $text .= $this->row("SUBTOTAL", "Rp" . number_format($subtotal, 0, ',', '.')) . "\n";
+        $text .= $this->row("SERVICE 7%", "Rp" . number_format($service, 0, ',', '.')) . "\n";
+
+        if ($biayaCard > 0) {
+            $text .= $this->row("BIAYA CARD", "Rp" . number_format($biayaCard, 0, ',', '.')) . "\n";
+        }
+
+        $text .= $this->line("-") . "\n";
+        $text .= $this->row("TOTAL", "Rp" . number_format($total, 0, ',', '.')) . "\n";
+        $text .= $this->row("BAYAR", "Rp" . number_format($bayar, 0, ',', '.')) . "\n";
+        $text .= $this->row("KEMBALIAN", "Rp" . number_format($kembalian, 0, ',', '.')) . "\n";
         $text .= $this->line("=") . "\n";
         $text .= $this->center("TERIMA KASIH") . "\n";
         $text .= "\n\n\n";

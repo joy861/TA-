@@ -404,6 +404,11 @@ public function store(Request $request)
                 'kasir'      => $pesanan->user->nama ?? '-',
                 'metode'     => strtoupper($pesanan->metode_pembayaran ?? 'CASH'),
 
+                // Rincian pembayaran untuk struk
+                'subtotal'   => $pesanan->total_harga ?? 0,
+                'service'    => $pesanan->pajak ?? 0,
+                'biaya_card' => $pesanan->biaya_card ?? 0,
+
                 // Total pembayaran final
                 'total'      => $pesanan->total_bayar ?? $pesanan->total_harga,
                 'bayar'      => $pesanan->bayar ?? $pesanan->total_bayar,

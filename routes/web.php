@@ -59,14 +59,27 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/meja/status/{id}/{status}', [MejaController::class, 'updateStatus'])
         ->name('meja.status');
 
+    /*
+    |--------------------------------------------------------------------------
+    | LAPORAN
+    |--------------------------------------------------------------------------
+    */
     Route::get('/laporan', [LaporanController::class, 'index'])
         ->name('laporan.index');
+
+    // Fallback supaya refresh/back di /laporan/filter tidak error Method Not Allowed
+    Route::get('/laporan/filter', function () {
+        return redirect()->route('laporan.index');
+    });
 
     Route::post('/laporan/filter', [LaporanController::class, 'filter'])
         ->name('laporan.filter');
 
     Route::get('/laporan/cetak/{tanggal}', [LaporanController::class, 'cetak'])
         ->name('laporan.cetak');
+
+    Route::get('/laporan/menu-terlaris/cetak/{tanggal}', [LaporanController::class, 'cetakMenuTerlaris'])
+        ->name('laporan.menu-terlaris.cetak');
 });
 
 /*
