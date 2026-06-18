@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Cetak Menu Terlaris - {{ $periodeLabel ?? $tanggal }}</title>
+    <title>Cetak Produk Terlaris - {{ $periodeLabel ?? $tanggal }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -52,7 +52,7 @@
         <div class="brand-sub">Garden View Restaurant</div>
     </div>
     <div class="header-right">
-        <h2>Laporan Menu Terlaris</h2>
+        <h2>Laporan Produk Terlaris</h2>
         <p>Periode: {{ $periodeLabel ?? \Carbon\Carbon::parse($tanggal)->locale('id')->isoFormat('D MMMM YYYY') }}</p>
         <p>Dicetak: {{ \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM YYYY, HH:mm') }}</p>
     </div>
@@ -70,19 +70,19 @@
         <div class="summary-sub">{{ $menuPalingLaris ? number_format($menuPalingLaris->total_terjual, 0, ',', '.') . ' terjual' : 'belum ada transaksi' }}</div>
     </div>
     <div class="summary-box dark">
-        <div class="summary-label">Pendapatan Menu</div>
+        <div class="summary-label">Pendapatan Produk</div>
         <div class="summary-value">Rp {{ number_format($totalPendapatanMenu, 0, ',', '.') }}</div>
         <div class="summary-sub">berdasarkan subtotal menu</div>
     </div>
 </div>
 
-<div class="section-title">Ranking Menu Terlaris</div>
+<div class="section-title">Ranking Produk Terlaris</div>
 
 <table>
     <thead>
         <tr>
             <th>Rank</th>
-            <th>Nama Menu</th>
+            <th>Nama Produk</th>
             <th>Kategori</th>
             <th class="text-right">Jumlah Terjual</th>
             <th class="text-right">Transaksi</th>
@@ -102,7 +102,7 @@
         @empty
             <tr>
                 <td colspan="6" style="text-align:center; color:rgba(13,27,42,0.4); padding:20px;">
-                    Belum ada data menu terjual pada periode ini
+                    Belum ada data produk terjual pada periode ini
                 </td>
             </tr>
         @endforelse

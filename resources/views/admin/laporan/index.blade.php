@@ -48,7 +48,7 @@
     <div>
         <p class="text-xs font-bold tracking-widest uppercase mb-1" style="color:#60a5fa; letter-spacing:0.15em;">ANALISIS</p>
         <h1 class="text-2xl font-black tracking-tight" style="color:#1e3a5f; letter-spacing:-0.5px;">Laporan</h1>
-        <p class="text-sm mt-0.5" style="color:rgba(30,58,95,0.5);">Rekap penjualan dan menu terlaris restoran</p>
+        <p class="text-sm mt-0.5" style="color:rgba(30,58,95,0.5);">Rekap penjualan dan Produk terlaris restoran</p>
     </div>
 
     <div class="flex gap-2 flex-wrap">
@@ -63,7 +63,7 @@
            data-print-btn="terlaris"
            class="laporan-print-btn inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex-shrink-0"
            style="background:#1e3a5f; color:#fff; display:none;">
-            <i class="bi bi-printer"></i> Cetak Menu Terlaris
+            <i class="bi bi-printer"></i> Cetak Produk Terlaris
         </a>
     </div>
 </div>
@@ -81,7 +81,7 @@
                 class="laporan-tab-btn inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-black transition-all"
                 style="border:none; background:#eef2ff; color:#1e3a5f;">
             <i class="bi bi-trophy"></i>
-            Menu Terlaris
+            Produk Terlaris
         </button>
     </div>
 </div>
@@ -265,7 +265,7 @@
     </div>
 </div>
 
-{{-- PANEL MENU TERLARIS --}}
+{{-- PANEL Produk TERLARIS --}}
 <div id="panel-terlaris" class="laporan-panel" style="display:none;">
     <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:12px;">
         <div class="rounded-2xl p-5" style="background:#fff; border:1px solid rgba(30,58,95,0.08);">
@@ -293,7 +293,7 @@
     <div class="rounded-2xl overflow-hidden" style="background:#fff; border:1px solid rgba(30,58,95,0.08);">
         <div class="flex items-center justify-between px-6 py-4" style="border-bottom:1px solid rgba(30,58,95,0.06);">
             <div>
-                <h3 class="text-sm font-black" style="color:#1e3a5f;">Ranking Menu Terlaris</h3>
+                <h3 class="text-sm font-black" style="color:#1e3a5f;">Ranking Produk Terlaris</h3>
                 <p class="text-xs mt-0.5" style="color:rgba(30,58,95,0.4);">Berdasarkan transaksi sudah bayar pada {{ $periodeLabel }}</p>
             </div>
             <span class="text-xs font-bold px-3 py-1.5 rounded-lg" style="background:#eef2ff; color:#1e3a5f;">{{ $menuTerlaris->count() }} menu</span>
