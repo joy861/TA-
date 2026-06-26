@@ -78,4 +78,10 @@ class MenuController extends Controller
 
         return redirect()->route('menu.index')->with('success', 'Menu berhasil dihapus');
     }
+
+    public function cetak()
+{
+    $menu = Menu::with('kategori')->orderBy('id_kategori')->get();
+    return view('admin.menu.cetak', compact('menu'));
+}
 }

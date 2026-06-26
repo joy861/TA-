@@ -418,11 +418,11 @@
                 </div>
             @endif
 
-            <div class="actions">
-                <button type="button" class="btn-print" onclick="cetakKeDapur()">
-                    Cetak ke Dapur
-                </button>
-            </div>
+<div class="actions">
+    <button type="button" class="btn-print" onclick="cetakKeDapur()">
+        Cetak ke Dapur
+    </button>
+</div>
         </div>
     </div>
 </div>

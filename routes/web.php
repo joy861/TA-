@@ -53,6 +53,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('user', UserController::class);
     Route::resource('kategori', KategoriController::class);
+    Route::get('/menu/cetak', [MenuController::class, 'cetak'])->name('menu.cetak');
     Route::resource('menu', MenuController::class);
     Route::resource('meja', MejaController::class);
 
@@ -138,6 +139,8 @@ Route::middleware(['auth'])->group(function () {
     // Cetak dapur dibuat GET supaya bisa dibuka setelah simpan pesanan
     Route::get('/dapur/{id}/cetak', [DetailPesananController::class, 'cetakDapur'])
         ->name('dapur.cetak');
+        Route::get('/dapur/reprint/{id}', [DetailPesananController::class, 'reprint'])
+    ->name('dapur.reprint');
 
     /*
     |--------------------------------------------------------------------------
@@ -160,7 +163,4 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/struk/{id}/cetak', [StrukController::class, 'cetak'])
         ->name('struk.cetak');
-
-    Route::post('/struk/{id}/print', [StrukController::class, 'cetakThermal'])
-        ->name('struk.print');
 });

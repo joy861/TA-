@@ -8,13 +8,25 @@
         <h1 class="text-2xl font-black tracking-tight" style="color:#1e3a5f; letter-spacing:-0.5px;">Kelola Menu</h1>
         <p class="text-sm mt-0.5" style="color:rgba(30,58,95,0.5);">Tambah, edit, dan hapus menu makanan & minuman</p>
     </div>
-    <a href="{{ route('menu.create') }}"
-       class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex-shrink-0"
-       style="background:#1e3a5f; color:#fff;"
-       onmouseover="this.style.background='#60a5fa';this.style.color='#1e3a5f'"
-       onmouseout="this.style.background='#1e3a5f';this.style.color='#fff'">
-        <i class="bi bi-plus-lg"></i> Tambah Menu
-    </a>
+
+    <div class="flex flex-wrap items-center gap-3 flex-shrink-0">
+        <a href="{{ route('menu.create') }}"
+           class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap"
+           style="background:#1e3a5f; color:#fff;"
+           onmouseover="this.style.background='#60a5fa';this.style.color='#1e3a5f'"
+           onmouseout="this.style.background='#1e3a5f';this.style.color='#fff'">
+            <i class="bi bi-plus-lg"></i> Tambah Menu
+        </a>
+
+        <a href="{{ route('menu.cetak') }}"
+           target="_blank"
+           class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap"
+           style="background:#16a34a; color:#fff;"
+           onmouseover="this.style.background='#15803d'"
+           onmouseout="this.style.background='#16a34a'">
+            <i class="bi bi-printer"></i> Cetak Menu
+        </a>
+    </div>
 </div>
 
 @php

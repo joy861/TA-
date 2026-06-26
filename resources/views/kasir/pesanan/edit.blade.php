@@ -383,6 +383,47 @@
         color: #1e3a5f;
     }
 
+    /* ── Catatan Input ── */
+    .catatan-input {
+        width: 100%;
+        margin-top: 8px;
+        border-radius: 9px;
+        border: 1.5px solid rgba(30,58,95,0.15);
+        background: #fff;
+        color: #1e3a5f;
+        padding: 6px 9px;
+        font-size: 11px;
+        font-weight: 600;
+        font-family: inherit;
+        outline: none;
+        transition: all 0.2s ease;
+        display: none;
+        resize: none;
+        min-height: 40px;
+        line-height: 1.4;
+    }
+
+    .menu-card.selected .catatan-input,
+    .menu-card-guide.selected .catatan-input {
+        display: block;
+    }
+
+    .catatan-input:focus {
+        border-color: #60a5fa;
+        box-shadow: 0 0 0 3px rgba(96,165,250,0.12);
+    }
+
+    .catatan-input::placeholder {
+        color: rgba(30,58,95,0.3);
+        font-weight: 500;
+    }
+
+    .menu-card-guide .catatan-input:focus {
+        border-color: #60a5fa;
+        box-shadow: 0 0 0 3px rgba(96,165,250,0.15);
+    }
+    /* ── end Catatan ── */
+
     .order-bar {
         border-radius: 14px;
         padding: 12px;
@@ -631,6 +672,7 @@
                     </button>
                 </div>
 
+                {{-- ── PANEL NORMAL ── --}}
                 <div id="panel-normal" class="menu-panel active">
                     <div class="panel-header panel-header-normal">
                         <div class="panel-header-title">
@@ -658,11 +700,10 @@
                         <div class="menu-grid" id="grid-normal">
                             @foreach($menu as $mn)
                                 @php
-                                    $detailN = $detailNormal->first(function ($d) use ($mn) {
-                                        return $d->id_menu == $mn->id_menu;
-                                    });
-                                    $isSelN = $detailN !== null;
-                                    $qtyN   = $detailN ? $detailN->jumlah : 1;
+                                    $detailN  = $detailNormal->first(fn($d) => $d->id_menu == $mn->id_menu);
+                                    $isSelN   = $detailN !== null;
+                                    $qtyN     = $detailN ? $detailN->jumlah : 1;
+                                    $catatanN = $detailN ? ($detailN->catatan ?? '') : '';
                                 @endphp
                                 <div class="menu-card {{ $isSelN ? 'selected' : '' }}"
                                      data-grid="normal"
@@ -681,6 +722,12 @@
                                         <span class="qty-num">{{ $qtyN }}</span>
                                         <button type="button" class="qty-btn" onclick="ubahQty(event, this, 1, 'normal')">+</button>
                                     </div>
+                                    <textarea
+                                        class="catatan-input"
+                                        placeholder="Catatan (opsional)..."
+                                        onclick="event.stopPropagation()"
+                                        oninput="updateCatatan('normal', '{{ $mn->id_menu }}', this.value)"
+                                    >{{ $catatanN }}</textarea>
                                 </div>
                             @endforeach
                         </div>
@@ -691,6 +738,7 @@
                     </div>
                 </div>
 
+                {{-- ── PANEL GUIDE ── --}}
                 <div id="panel-guide" class="menu-panel">
                     <div class="panel-header panel-header-guide">
                         <div class="panel-header-title">
@@ -718,11 +766,10 @@
                         <div class="menu-grid" id="grid-guide">
                             @foreach($menu as $mn)
                                 @php
-                                    $detailG = $detailGuide->first(function ($d) use ($mn) {
-                                        return $d->id_menu == $mn->id_menu;
-                                    });
-                                    $isSelG = $detailG !== null;
-                                    $qtyG   = $detailG ? $detailG->jumlah : 1;
+                                    $detailG  = $detailGuide->first(fn($d) => $d->id_menu == $mn->id_menu);
+                                    $isSelG   = $detailG !== null;
+                                    $qtyG     = $detailG ? $detailG->jumlah : 1;
+                                    $catatanG = $detailG ? ($detailG->catatan ?? '') : '';
                                 @endphp
                                 <div class="menu-card-guide {{ $isSelG ? 'selected' : '' }}"
                                      data-grid="guide"
@@ -741,6 +788,12 @@
                                         <span class="qty-num">{{ $qtyG }}</span>
                                         <button type="button" class="qty-btn-guide" onclick="ubahQty(event, this, 1, 'guide')">+</button>
                                     </div>
+                                    <textarea
+                                        class="catatan-input"
+                                        placeholder="Catatan guide (opsional)..."
+                                        onclick="event.stopPropagation()"
+                                        oninput="updateCatatan('guide', '{{ $mn->id_menu }}', this.value)"
+                                    >{{ $catatanG }}</textarea>
                                 </div>
                             @endforeach
                         </div>
@@ -841,16 +894,26 @@
 <script>
     const pesananNormal  = {};
     const pesananGuide   = {};
+    const catatanNormal  = {};
+    const catatanGuide   = {};
     const activeKategori = { normal: 'semua', guide: 'semua' };
     const activeSearch   = { normal: '', guide: '' };
 
-    // Inisialisasi dari card yang sudah selected
+    // Inisialisasi qty dari card yang sudah selected
     document.querySelectorAll('#grid-normal .menu-card.selected').forEach(card => {
-        pesananNormal[card.dataset.id] = parseInt(card.querySelector('.qty-num').textContent);
+        const id = card.dataset.id;
+        pesananNormal[id] = parseInt(card.querySelector('.qty-num').textContent);
+
+        const ta = card.querySelector('.catatan-input');
+        if (ta && ta.value.trim()) catatanNormal[id] = ta.value.trim();
     });
 
     document.querySelectorAll('#grid-guide .menu-card-guide.selected').forEach(card => {
-        pesananGuide[card.dataset.id] = parseInt(card.querySelector('.qty-num').textContent);
+        const id = card.dataset.id;
+        pesananGuide[id] = parseInt(card.querySelector('.qty-num').textContent);
+
+        const ta = card.querySelector('.catatan-input');
+        if (ta && ta.value.trim()) catatanGuide[id] = ta.value.trim();
     });
 
     /*
@@ -859,7 +922,6 @@
      * Tujuannya agar saat edit:
      * - menu lama tetap membawa id_detail lama
      * - menu baru mengirim id_detail kosong
-     * Kalau id_detail tidak sejajar, menu tambahan bisa salah terbaca sebagai menu lama.
      */
     const existingDetailIds = {
         @foreach($pesanan->detailPesanan as $d)
@@ -870,29 +932,33 @@
     updateHidden();
     updateOrderBar();
 
+    // ─────────────────────────────────────────
+    // Tab switcher
+    // ─────────────────────────────────────────
     function switchMenuTab(grid) {
         document.querySelectorAll('.menu-tab-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.menuTab === grid);
         });
-
-        document.querySelectorAll('.menu-panel').forEach(panel => {
-            panel.classList.remove('active');
-        });
-
+        document.querySelectorAll('.menu-panel').forEach(panel => panel.classList.remove('active'));
         const target = document.getElementById(grid === 'normal' ? 'panel-normal' : 'panel-guide');
-        if (target) {
-            target.classList.add('active');
-        }
+        if (target) target.classList.add('active');
     }
 
+    // ─────────────────────────────────────────
+    // Toggle menu pilih / batal
+    // ─────────────────────────────────────────
     function toggleMenu(grid, card) {
         const id      = card.dataset.id;
         const pesanan = grid === 'normal' ? pesananNormal : pesananGuide;
+        const catatan = grid === 'normal' ? catatanNormal : catatanGuide;
 
         if (pesanan[id]) {
             delete pesanan[id];
+            delete catatan[id];
             card.classList.remove('selected');
             card.querySelector('.qty-num').textContent = 1;
+            const ta = card.querySelector('.catatan-input');
+            if (ta) ta.value = '';
         } else {
             pesanan[id] = 1;
             card.classList.add('selected');
@@ -902,19 +968,26 @@
         updateOrderBar();
     }
 
+    // ─────────────────────────────────────────
+    // Ubah qty
+    // ─────────────────────────────────────────
     function ubahQty(event, btn, delta, grid) {
         event.stopPropagation();
         const card    = btn.closest(grid === 'normal' ? '.menu-card' : '.menu-card-guide');
         const id      = card.dataset.id;
         const pesanan = grid === 'normal' ? pesananNormal : pesananGuide;
+        const catatan = grid === 'normal' ? catatanNormal : catatanGuide;
         const qtyEl   = card.querySelector('.qty-num');
 
         let qty = (pesanan[id] || 0) + delta;
 
         if (qty < 1) {
             delete pesanan[id];
+            delete catatan[id];
             card.classList.remove('selected');
             qtyEl.textContent = 1;
+            const ta = card.querySelector('.catatan-input');
+            if (ta) ta.value = '';
         } else {
             pesanan[id] = qty;
             qtyEl.textContent = qty;
@@ -924,11 +997,27 @@
         updateOrderBar();
     }
 
+    // ─────────────────────────────────────────
+    // Update catatan state
+    // ─────────────────────────────────────────
+    function updateCatatan(grid, id, value) {
+        const store = grid === 'normal' ? catatanNormal : catatanGuide;
+        if (value.trim()) {
+            store[id] = value.trim();
+        } else {
+            delete store[id];
+        }
+        updateHidden();
+    }
+
+    // ─────────────────────────────────────────
+    // Build hidden inputs (sejajar menu[])
+    // ─────────────────────────────────────────
     function updateHidden() {
         const wrap = document.getElementById('hidden-inputs');
 
         wrap.querySelectorAll(
-            'input[name="id_detail[]"], input[name="menu[]"], input[name="jumlah[]"], input[name="harga_pakai[]"], input[name="tipe_harga[]"]'
+            'input[name="id_detail[]"], input[name="menu[]"], input[name="jumlah[]"], input[name="harga_pakai[]"], input[name="tipe_harga[]"], input[name="catatan[]"]'
         ).forEach(el => el.remove());
 
         Object.entries(pesananNormal).forEach(([id, qty]) => {
@@ -942,6 +1031,7 @@
             appendHidden(wrap, 'jumlah[]',      qty);
             appendHidden(wrap, 'harga_pakai[]', card.dataset.harga);
             appendHidden(wrap, 'tipe_harga[]',  'normal');
+            appendHidden(wrap, 'catatan[]',     catatanNormal[id] || '');
         });
 
         Object.entries(pesananGuide).forEach(([id, qty]) => {
@@ -955,6 +1045,7 @@
             appendHidden(wrap, 'jumlah[]',      qty);
             appendHidden(wrap, 'harga_pakai[]', card.dataset.harga);
             appendHidden(wrap, 'tipe_harga[]',  'guide');
+            appendHidden(wrap, 'catatan[]',     catatanGuide[id] || '');
         });
     }
 
@@ -966,6 +1057,9 @@
         wrap.appendChild(el);
     }
 
+    // ─────────────────────────────────────────
+    // Ringkasan order bar
+    // ─────────────────────────────────────────
     function updateOrderBar() {
         const hasNormal = Object.keys(pesananNormal).length > 0;
         const hasGuide  = Object.keys(pesananGuide).length > 0;
@@ -981,12 +1075,16 @@
         document.getElementById('list-normal').innerHTML = Object.entries(pesananNormal).map(([id, qty]) => {
             const card  = document.querySelector(`#grid-normal .menu-card[data-id="${id}"]`);
             if (!card) return '';
-            const harga = parseInt(card.dataset.harga);
-            const sub   = harga * qty;
-            totalNormal += sub;
-            return `<div class="order-item">
-                <span style="font-weight:700;">${card.dataset.nama} <strong>x${qty}</strong></span>
-                <span style="font-weight:900; white-space:nowrap;">Rp${sub.toLocaleString('id-ID')}</span>
+            const harga   = parseInt(card.dataset.harga);
+            const sub     = harga * qty;
+            const catatan = catatanNormal[id] ? `<div style="font-size:10px;font-weight:600;color:rgba(30,58,95,0.5);margin-top:2px;">📝 ${catatanNormal[id]}</div>` : '';
+            totalNormal  += sub;
+            return `<div class="order-item" style="flex-direction:column;align-items:flex-start;">
+                <div style="display:flex;justify-content:space-between;width:100%;gap:8px;">
+                    <span style="font-weight:700;">${card.dataset.nama} <strong>x${qty}</strong></span>
+                    <span style="font-weight:900; white-space:nowrap;">Rp${sub.toLocaleString('id-ID')}</span>
+                </div>
+                ${catatan}
             </div>`;
         }).join('');
         document.getElementById('subtotal-normal').textContent = 'Rp' + totalNormal.toLocaleString('id-ID');
@@ -994,12 +1092,16 @@
         document.getElementById('list-guide').innerHTML = Object.entries(pesananGuide).map(([id, qty]) => {
             const card  = document.querySelector(`#grid-guide .menu-card-guide[data-id="${id}"]`);
             if (!card) return '';
-            const harga = parseInt(card.dataset.harga);
-            const sub   = harga * qty;
-            totalGuide += sub;
-            return `<div class="order-item">
-                <span style="font-weight:700;">${card.dataset.nama} <strong>x${qty}</strong></span>
-                <span style="font-weight:900; white-space:nowrap;">Rp${sub.toLocaleString('id-ID')}</span>
+            const harga   = parseInt(card.dataset.harga);
+            const sub     = harga * qty;
+            const catatan = catatanGuide[id] ? `<div style="font-size:10px;font-weight:600;color:rgba(30,58,95,0.5);margin-top:2px;">📝 ${catatanGuide[id]}</div>` : '';
+            totalGuide   += sub;
+            return `<div class="order-item" style="flex-direction:column;align-items:flex-start;">
+                <div style="display:flex;justify-content:space-between;width:100%;gap:8px;">
+                    <span style="font-weight:700;">${card.dataset.nama} <strong>x${qty}</strong></span>
+                    <span style="font-weight:900; white-space:nowrap;">Rp${sub.toLocaleString('id-ID')}</span>
+                </div>
+                ${catatan}
             </div>`;
         }).join('');
         document.getElementById('subtotal-guide').textContent = 'Rp' + totalGuide.toLocaleString('id-ID');
@@ -1007,6 +1109,9 @@
         document.getElementById('grand-total').textContent = 'Rp' + (totalNormal + totalGuide).toLocaleString('id-ID');
     }
 
+    // ─────────────────────────────────────────
+    // Filter kategori & search
+    // ─────────────────────────────────────────
     function filterKategori(grid, kategori, btn) {
         activeKategori[grid] = kategori;
 
@@ -1044,6 +1149,9 @@
         noResult.style.display = visible === 0 ? 'block' : 'none';
     }
 
+    // ─────────────────────────────────────────
+    // Modal konfirmasi
+    // ─────────────────────────────────────────
     function openConfirmUpdateModal() {
         const form = document.getElementById('formUpdatePesanan');
         if (!form.checkValidity()) {

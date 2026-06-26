@@ -10,6 +10,11 @@ class AdminSeeder extends Seeder
 {
     public function run(): void
     {
+        // Cek apakah user admin sudah ada
+        if (DB::table('users')->where('username', 'admin')->exists()) {
+            return;
+        }
+
         DB::table('users')->insert([
             'nama' => 'Admin',
             'username' => 'admin',

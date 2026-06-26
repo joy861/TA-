@@ -385,6 +385,35 @@
         color: #1e3a5f;
     }
 
+    /* === CATATAN INPUT (BARU) === */
+    .catatan-input {
+        display: none;
+        width: 100%;
+        margin-top: 7px;
+        height: 30px;
+        border-radius: 8px;
+        border: 1.5px solid rgba(30,58,95,0.12);
+        padding: 0 8px;
+        font-size: 11px;
+        font-weight: 600;
+        color: #1e3a5f;
+        outline: none;
+        background: #fff;
+    }
+
+    .catatan-input::placeholder { color: rgba(30,58,95,0.32); font-weight: 500; }
+
+    .catatan-input:focus {
+        border-color: #60a5fa;
+        box-shadow: 0 0 0 3px rgba(96,165,250,0.12);
+    }
+
+    .menu-card.selected .catatan-input,
+    .menu-card-guide.selected .catatan-input {
+        display: block;
+    }
+    /* === END CATATAN INPUT === */
+
     .order-bar {
         border-radius: 14px;
         padding: 12px;
@@ -404,6 +433,14 @@
     }
 
     .order-item:last-child { border-bottom: none; }
+
+    .order-item-catatan {
+        display: block;
+        font-size: 10.5px;
+        font-weight: 600;
+        opacity: 0.7;
+        margin-top: 2px;
+    }
 
     .order-subtotal,
     .order-grand-total {
@@ -584,6 +621,11 @@
                                             <span class="qty-num">1</span>
                                             <button type="button" class="qty-btn" onclick="ubahQty(event, this, 1, 'normal')">+</button>
                                         </div>
+                                        <input type="text"
+                                               class="catatan-input"
+                                               placeholder="Catatan (opsional)"
+                                               onclick="event.stopPropagation()"
+                                               oninput="ubahCatatan(event, this, 'normal')">
                                     </div>
                                 @endif
                             @endforeach
@@ -639,6 +681,11 @@
                                             <span class="qty-num">1</span>
                                             <button type="button" class="qty-btn-guide" onclick="ubahQty(event, this, 1, 'guide')">+</button>
                                         </div>
+                                        <input type="text"
+                                               class="catatan-input"
+                                               placeholder="Catatan (opsional)"
+                                               onclick="event.stopPropagation()"
+                                               oninput="ubahCatatan(event, this, 'guide')">
                                     </div>
                                 @endif
                             @endforeach
@@ -745,8 +792,9 @@
             delete pesanan[id];
             card.classList.remove('selected');
             card.querySelector('.qty-num').textContent = 1;
+            card.querySelector('.catatan-input').value = '';
         } else {
-            pesanan[id] = 1;
+            pesanan[id] = { qty: 1, catatan: '' };
             card.classList.add('selected');
         }
         updateHidden();
@@ -759,39 +807,64 @@
         const id      = card.dataset.id;
         const pesanan = grid === 'normal' ? pesananNormal : pesananGuide;
         const qtyEl   = card.querySelector('.qty-num');
-        let qty = parseInt(qtyEl.textContent) + delta;
+        const current = pesanan[id]?.qty ?? 1;
+        let qty = current + delta;
+
         if (qty < 1) {
             delete pesanan[id];
             card.classList.remove('selected');
             qtyEl.textContent = 1;
+            card.querySelector('.catatan-input').value = '';
         } else {
-            pesanan[id] = qty;
+            const catatanLama = pesanan[id]?.catatan ?? '';
+            pesanan[id] = { qty: qty, catatan: catatanLama };
             qtyEl.textContent = qty;
         }
         updateHidden();
         updateOrderBar();
     }
 
+    function ubahCatatan(event, input, grid) {
+        const card    = input.closest(grid === 'normal' ? '.menu-card' : '.menu-card-guide');
+        const id      = card.dataset.id;
+        const pesanan = grid === 'normal' ? pesananNormal : pesananGuide;
+
+        if (pesanan[id]) {
+            pesanan[id].catatan = input.value;
+            updateHidden();
+        }
+    }
+
+    function escapeHtml(str) {
+        return String(str ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+    }
+
     function updateHidden() {
         const wrap = document.getElementById('hidden-inputs');
         wrap.innerHTML = '';
 
-        Object.entries(pesananNormal).forEach(([id, qty]) => {
+        Object.entries(pesananNormal).forEach(([id, data]) => {
             const card = document.querySelector(`#grid-normal .menu-card[data-id="${id}"]`);
             if (!card) return;
             wrap.innerHTML += `<input type="hidden" name="menu[]" value="${id}">`;
-            wrap.innerHTML += `<input type="hidden" name="jumlah[]" value="${qty}">`;
+            wrap.innerHTML += `<input type="hidden" name="jumlah[]" value="${data.qty}">`;
             wrap.innerHTML += `<input type="hidden" name="harga_pakai[]" value="${card.dataset.harga}">`;
             wrap.innerHTML += `<input type="hidden" name="tipe_harga[]" value="normal">`;
+            wrap.innerHTML += `<input type="hidden" name="catatan[]" value="${escapeHtml(data.catatan)}">`;
         });
 
-        Object.entries(pesananGuide).forEach(([id, qty]) => {
+        Object.entries(pesananGuide).forEach(([id, data]) => {
             const card = document.querySelector(`#grid-guide .menu-card-guide[data-id="${id}"]`);
             if (!card) return;
             wrap.innerHTML += `<input type="hidden" name="menu[]" value="${id}">`;
-            wrap.innerHTML += `<input type="hidden" name="jumlah[]" value="${qty}">`;
+            wrap.innerHTML += `<input type="hidden" name="jumlah[]" value="${data.qty}">`;
             wrap.innerHTML += `<input type="hidden" name="harga_pakai[]" value="${card.dataset.harga}">`;
             wrap.innerHTML += `<input type="hidden" name="tipe_harga[]" value="guide">`;
+            wrap.innerHTML += `<input type="hidden" name="catatan[]" value="${escapeHtml(data.catatan)}">`;
         });
     }
 
@@ -808,28 +881,34 @@
         let totalGuide  = 0;
 
         const listNormal = document.getElementById('list-normal');
-        listNormal.innerHTML = Object.entries(pesananNormal).map(([id, qty]) => {
+        listNormal.innerHTML = Object.entries(pesananNormal).map(([id, data]) => {
             const card  = document.querySelector(`#grid-normal .menu-card[data-id="${id}"]`);
             if (!card) return '';
             const harga = parseInt(card.dataset.harga);
-            const sub   = harga * qty;
+            const sub   = harga * data.qty;
             totalNormal += sub;
+            const catatanHtml = data.catatan
+                ? `<span class="order-item-catatan">📝 ${escapeHtml(data.catatan)}</span>`
+                : '';
             return `<div class="order-item">
-                <span style="font-weight:700;">${card.dataset.nama} <strong>x${qty}</strong></span>
+                <span style="font-weight:700;">${escapeHtml(card.dataset.nama)} <strong>x${data.qty}</strong>${catatanHtml}</span>
                 <span style="font-weight:900; white-space:nowrap;">Rp${sub.toLocaleString('id-ID')}</span>
             </div>`;
         }).join('');
         document.getElementById('subtotal-normal').textContent = 'Rp' + totalNormal.toLocaleString('id-ID');
 
         const listGuide = document.getElementById('list-guide');
-        listGuide.innerHTML = Object.entries(pesananGuide).map(([id, qty]) => {
+        listGuide.innerHTML = Object.entries(pesananGuide).map(([id, data]) => {
             const card  = document.querySelector(`#grid-guide .menu-card-guide[data-id="${id}"]`);
             if (!card) return '';
             const harga = parseInt(card.dataset.harga);
-            const sub   = harga * qty;
+            const sub   = harga * data.qty;
             totalGuide += sub;
+            const catatanHtml = data.catatan
+                ? `<span class="order-item-catatan">📝 ${escapeHtml(data.catatan)}</span>`
+                : '';
             return `<div class="order-item">
-                <span style="font-weight:700;">${card.dataset.nama} <strong>x${qty}</strong></span>
+                <span style="font-weight:700;">${escapeHtml(card.dataset.nama)} <strong>x${data.qty}</strong>${catatanHtml}</span>
                 <span style="font-weight:900; white-space:nowrap;">Rp${sub.toLocaleString('id-ID')}</span>
             </div>`;
         }).join('');

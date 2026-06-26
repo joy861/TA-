@@ -117,6 +117,7 @@ public function store(Request $request)
             $tipeHarga  = $request->tipe_harga[$key] ?? 'normal';
             $hargaPakai = (int) ($request->harga_pakai[$key] ?? $menu->harga);
             $subtotal   = $hargaPakai * $jumlah;
+            $catatan    = $request->catatan[$key] ?? null; // tambahkan
 
             DetailPesanan::create([
                 'id_pesanan'  => $pesanan->id_pesanan,
@@ -125,6 +126,7 @@ public function store(Request $request)
                 'subtotal'    => $subtotal,
                 'tipe_harga'  => $tipeHarga,
                 'harga_pakai' => $hargaPakai,
+                'catatan'     => $catatan, // tambahkan
                 'is_new'      => 1,
                 'jumlah_awal' => null,
             ]);
@@ -199,6 +201,7 @@ public function store(Request $request)
             $tipeHarga = $request->tipe_harga[$key] ?? 'normal';
             $hargaPakai = (int) ($request->harga_pakai[$key] ?? $menu->harga);
             $subtotal = $hargaPakai * $jumlahBaru;
+             $catatanBaru = $request->catatan[$key] ?? null; // tambahkan
 
             /*
              * Penting:
@@ -217,9 +220,12 @@ public function store(Request $request)
                 $jumlahLama = (int) ($detail->jumlah ?? 0);
                 $menuLama = (int) ($detail->id_menu ?? 0);
                 $isNewLama = (int) ($detail->is_new ?? 0);
+                $catatanLama  = $detail->catatan; // tambahkan
 
                 $menuBerubah = $menuLama !== (int) $id_menu;
                 $jumlahBertambah = $jumlahBaru > $jumlahLama;
+                $catatanBerubah  = $catatanLama !== $catatanBaru; // tambahkan
+
 
                 if ($menuBerubah) {
                     /*
@@ -256,6 +262,7 @@ public function store(Request $request)
                     'subtotal'    => $subtotal,
                     'tipe_harga'  => $tipeHarga,
                     'harga_pakai' => $hargaPakai,
+                    'catatan'     => $catatanBaru, // tambahkan
                     'is_new'      => $isNew,
                     'jumlah_awal' => $jumlahAwal,
                 ]);
@@ -275,6 +282,7 @@ public function store(Request $request)
                     'subtotal'    => $subtotal,
                     'tipe_harga'  => $tipeHarga,
                     'harga_pakai' => $hargaPakai,
+                     'catatan'     => $catatanBaru, // tambahkan
                     'is_new'      => 1,
                     'jumlah_awal' => null,
                 ]);
@@ -323,7 +331,7 @@ public function store(Request $request)
     }
 
     // ✅ POST — Proses pembayaran
-  public function bayar(Request $request, $id)
+public function bayar(Request $request, $id)
 {
     $request->validate([
         'metode_pembayaran' => 'required|in:cash,qris,card',
@@ -342,23 +350,13 @@ public function store(Request $request)
                 ->with('success', 'Pesanan ini sudah dibayar.');
         }
 
-        // Subtotal dari total harga pesanan
-        $subtotal = (int) ($pesanan->total_harga ?? 0);
-
-        // Service / pajak 7%
-        $pajak = (int) round($subtotal * 0.07);
-
-        // Biaya card 2%, hanya kalau metode pembayaran card
-        $biayaCard = 0;
-
-        if ($request->metode_pembayaran === 'card') {
-            $biayaCard = (int) round(($subtotal + $pajak) * 0.02);
-        }
-
-        // Total akhir yang harus dibayar
+        $subtotal  = (int) ($pesanan->total_harga ?? 0);
+        $pajak     = (int) round($subtotal * 0.07);
+        $biayaCard = $request->metode_pembayaran === 'card'
+                        ? (int) round(($subtotal + $pajak) * 0.02)
+                        : 0;
         $totalBayar = $subtotal + $pajak + $biayaCard;
 
-        // Validasi jumlah bayar
         if ((int) $request->bayar < $totalBayar) {
             DB::rollBack();
 
@@ -368,73 +366,25 @@ public function store(Request $request)
             );
         }
 
-        // Kembalian dihitung dari total akhir
         $kembalian = (int) $request->bayar - $totalBayar;
 
-        // Simpan pembayaran ke database
         $pesanan->update([
             'status'            => 'sudah_bayar',
             'metode_pembayaran' => $request->metode_pembayaran,
-
-            // Ini yang dibutuhkan laporan admin
             'pajak'             => $pajak,
             'biaya_card'        => $biayaCard,
             'total_bayar'       => $totalBayar,
-
-            // Data pembayaran
             'bayar'             => (int) $request->bayar,
             'kembalian'         => $kembalian,
         ]);
 
-        // Meja kembali kosong setelah dibayar
         Meja::where('id_meja', $pesanan->id_meja)
             ->update(['status' => 'kosong']);
 
         DB::commit();
 
-        // Ambil ulang data lengkap untuk cetak struk
-        $pesanan = Pesanan::with('detailPesanan.menu', 'meja', 'user')
-            ->findOrFail($id);
-
-        try {
-            app(ThermalPrinterService::class)->cetakStruk([
-                'id_pesanan' => $pesanan->id_pesanan,
-                'nama_meja'  => $pesanan->meja->nomor_meja ?? '-',
-                'waktu'      => $pesanan->created_at->timezone('Asia/Makassar')->format('d/m/Y H:i'),
-                'kasir'      => $pesanan->user->nama ?? '-',
-                'metode'     => strtoupper($pesanan->metode_pembayaran ?? 'CASH'),
-
-                // Rincian pembayaran untuk struk
-                'subtotal'   => $pesanan->total_harga ?? 0,
-                'service'    => $pesanan->pajak ?? 0,
-                'biaya_card' => $pesanan->biaya_card ?? 0,
-
-                // Total pembayaran final
-                'total'      => $pesanan->total_bayar ?? $pesanan->total_harga,
-                'bayar'      => $pesanan->bayar ?? $pesanan->total_bayar,
-                'kembalian'  => $pesanan->kembalian ?? 0,
-
-                'detail'     => $pesanan->detailPesanan->map(function ($item) {
-                    $harga = $item->harga_pakai ?? $item->menu->harga ?? 0;
-
-                    return [
-                        'nama'     => $item->menu->nama_menu ?? '-',
-                        'jumlah'   => $item->jumlah ?? 0,
-                        'harga'    => $harga,
-                        'subtotal' => $item->subtotal ?? ($harga * $item->jumlah),
-                    ];
-                })->toArray(),
-            ]);
-
-            return redirect()->route('pesanan.index')
-                ->with('success', 'Pembayaran berhasil diproses dan struk berhasil dicetak.');
-
-        } catch (\Exception $e) {
-            Log::error('Cetak struk setelah bayar gagal: ' . $e->getMessage());
-
-            return redirect()->route('pesanan.index')
-                ->with('error', 'Pembayaran berhasil, tetapi cetak struk gagal: ' . $e->getMessage());
-        }
+        return redirect()->route('struk.cetak', $pesanan->id_pesanan)
+            ->with('success', 'Pembayaran berhasil diproses.');
 
     } catch (\Exception $e) {
         DB::rollBack();

@@ -45,12 +45,12 @@
         return in_array($status, ['sudah_bayar', 'sudah bayar', 'lunas', 'selesai']);
     };
 
-$getMeja = function ($item) {
-    return $item->meja->nomor_meja
-        ?? $item->nomor_meja
-        ?? $item->id_meja
-        ?? '-';
-};
+    $getMeja = function ($item) {
+        return $item->meja->nomor_meja
+            ?? $item->nomor_meja
+            ?? $item->id_meja
+            ?? '-';
+    };
 
     $getTotal = function ($item) {
         return $item->total_harga ?? $item->total ?? $item->grand_total ?? 0;
@@ -428,6 +428,8 @@ $getMeja = function ($item) {
     .btn-aksi-edit:hover { background: #b45309; color: #fff; }
     .btn-aksi-bayar { background: #16a34a; color: #fff; }
     .btn-aksi-bayar:hover { background: #15803d; color: #fff; }
+    .btn-aksi-cetak { background: rgba(99,102,241,0.10); color: #4f46e5; }
+    .btn-aksi-cetak:hover { background: #4f46e5; color: #fff; }
 
     .meja-pill {
         display: flex;
@@ -681,7 +683,7 @@ $getMeja = function ($item) {
                     <th style="width:140px;">Meja</th>
                     <th style="width:130px;">Total</th>
                     <th style="width:135px;">Status</th>
-                    <th style="width:190px; text-align:center;">Aksi</th>
+                    <th style="width:210px; text-align:center;">Aksi</th>
                 </tr>
             </thead>
             <tbody>
@@ -712,8 +714,12 @@ $getMeja = function ($item) {
                                 : (\Illuminate\Support\Facades\Route::has('transaksi.bayar')
                                     ? route('transaksi.bayar', $id)
                                     : url('kasir/pesanan/' . $id . '/bayar'));
+
+                            $cetakUrl = \Illuminate\Support\Facades\Route::has('struk.cetak')
+                                ? route('struk.cetak', $id)
+                                : url('kasir/struk/' . $id . '/cetak');
                         } else {
-                            $detailUrl = $editUrl = $bayarUrl = '#';
+                            $detailUrl = $editUrl = $bayarUrl = $cetakUrl = '#';
                         }
                     @endphp
 
@@ -748,19 +754,21 @@ $getMeja = function ($item) {
                         </td>
                         <td class="aksi-cell">
                             <div class="aksi-group">
-                                <a href="{{ $detailUrl }}" class="btn-aksi btn-aksi-detail">
-                                    <i class="bi bi-eye"></i> Detail
-                                </a>
-
-                                @if(!$isPaid)
+                                @if($isPaid)
+                                    <a href="{{ $cetakUrl }}" class="btn-aksi btn-aksi-cetak" target="_blank">
+                                        <i class="bi bi-printer"></i> Cetak Struk
+                                    </a>
+                                    <span class="lunas-note">Lunas ✓</span>
+                                @else
+                                    <a href="{{ $detailUrl }}" class="btn-aksi btn-aksi-detail">
+                                        <i class="bi bi-eye"></i> Detail
+                                    </a>
                                     <a href="{{ $editUrl }}" class="btn-aksi btn-aksi-edit">
                                         <i class="bi bi-pencil"></i> Edit
                                     </a>
                                     <a href="{{ $bayarUrl }}" class="btn-aksi btn-aksi-bayar">
                                         <i class="bi bi-cash-coin"></i> Bayar
                                     </a>
-                                @else
-                                    <span class="lunas-note">Lunas ✓</span>
                                 @endif
                             </div>
                         </td>

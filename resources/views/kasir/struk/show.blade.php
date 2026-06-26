@@ -141,15 +141,8 @@
         </a>
         <a href="{{ route('struk.cetak', $pesanan->id_pesanan) }}" target="_blank" class="kasir-btn kasir-btn-success">
             <i class="bi bi-printer"></i>
-            <span>Preview Struk</span>
+            <span>Cetak Struk</span>
         </a>
-        <form action="{{ route('struk.print', $pesanan->id_pesanan) }}" method="POST" style="margin:0;">
-            @csrf
-            <button type="submit" class="kasir-btn kasir-btn-success">
-                <i class="bi bi-printer-fill"></i>
-                <span>Cetak Struk Thermal</span>
-            </button>
-        </form>
     </div>
 </div>
 
@@ -210,12 +203,19 @@
                             <tbody>
                                 @foreach($pesanan->detailPesanan as $d)
                                     @php
-                                        $harga = $d->menu->harga ?? 0;
-                                        $jumlah = $d->jumlah ?? 0;
+                                        $harga        = $d->harga_pakai ?? $d->menu->harga ?? 0;
+                                        $jumlah       = $d->jumlah ?? 0;
                                         $subtotalItem = $d->subtotal ?? ($harga * $jumlah);
                                     @endphp
                                     <tr>
-                                        <td class="font-bold">{{ $d->menu->nama_menu ?? '-' }}</td>
+                                        <td>
+                                            <div class="font-bold">{{ $d->menu->nama_menu ?? '-' }}</div>
+                                            @if(!empty($d->catatan))
+                                                <div style="font-size:11px; color:rgba(30,58,95,0.5); margin-top:2px;">
+                                                    📝 {{ $d->catatan }}
+                                                </div>
+                                            @endif
+                                        </td>
                                         <td style="color:rgba(30,58,95,0.6);">Rp{{ number_format($harga, 0, ',', '.') }}</td>
                                         <td>
                                             <span class="kasir-badge kasir-badge-info">{{ $jumlah }}x</span>
@@ -285,6 +285,10 @@
                     <span class="font-bold" style="color:#1e3a5f;">{{ $pesanan->user->nama ?? '-' }}</span>
                 </div>
                 <div class="flex justify-between gap-4 text-sm">
+                    <span style="color:rgba(30,58,95,0.55);">Metode</span>
+                    <span class="font-bold" style="color:#1e3a5f;">{{ strtoupper($metode) }}</span>
+                </div>
+                <div class="flex justify-between gap-4 text-sm">
                     <span style="color:rgba(30,58,95,0.55);">Subtotal</span>
                     <span class="font-bold" style="color:#1e3a5f;">Rp{{ number_format($subtotal, 0, ',', '.') }}</span>
                 </div>
@@ -298,9 +302,13 @@
                     <span class="font-bold" style="color:#1e3a5f;">Rp{{ number_format($biayaCard, 0, ',', '.') }}</span>
                 </div>
                 @endif
+                <div class="flex justify-between gap-4 text-sm">
+                    <span style="color:rgba(30,58,95,0.55);">Bayar</span>
+                    <span class="font-bold" style="color:#1e3a5f;">Rp{{ number_format($pesanan->bayar ?? $totalBayar, 0, ',', '.') }}</span>
+                </div>
                 <div class="flex justify-between gap-4 text-sm pt-2" style="border-top:1px dashed rgba(30,58,95,0.1);">
-                    <span style="color:rgba(30,58,95,0.55);">Total</span>
-                    <span class="font-black" style="color:#15803d;">Rp{{ number_format($totalBayar, 0, ',', '.') }}</span>
+                    <span style="color:rgba(30,58,95,0.55);">Kembalian</span>
+                    <span class="font-black" style="color:#15803d;">Rp{{ number_format($pesanan->kembalian ?? 0, 0, ',', '.') }}</span>
                 </div>
             </div>
 
