@@ -391,6 +391,7 @@ public function bayar(Request $request, $id)
     $request->validate([
         'metode_pembayaran' => 'required|in:cash,qris,card',
         'bayar'             => 'required|numeric|min:0',
+        'bayar_cash'        => 'nullable|numeric|min:0',
     ]);
 
     DB::beginTransaction();
@@ -407,21 +408,44 @@ public function bayar(Request $request, $id)
 
         $subtotal  = (int) ($pesanan->total_harga ?? 0);
         $pajak     = (int) round($subtotal * 0.07);
-        $biayaCard = $request->metode_pembayaran === 'card'
+
+        $isElektronik = in_array($request->metode_pembayaran, ['card', 'qris']);
+
+        $biayaCard = $isElektronik
                         ? (int) round(($subtotal + $pajak) * 0.02)
                         : 0;
+
         $totalBayar = $subtotal + $pajak + $biayaCard;
 
-        if ((int) $request->bayar < $totalBayar) {
-            DB::rollBack();
+        $bayarCash       = null;
+        $bayarElektronik = null;
 
-            return back()->with(
-                'error',
-                'Jumlah bayar kurang. Total yang harus dibayar adalah Rp ' . number_format($totalBayar, 0, ',', '.')
-            );
+        if ($isElektronik) {
+            // ── Cek apakah ini split payment (cash + qris/card) ──
+            $bayarCash = (int) ($request->bayar_cash ?? 0);
+
+            if ($bayarCash > $totalBayar) {
+                DB::rollBack();
+                return back()->with('error', 'Nominal cash tidak boleh melebihi total pembayaran.');
+            }
+
+            $bayarElektronik = $totalBayar - $bayarCash;
+            $bayar           = $totalBayar;
+            $kembalian       = 0;
+        } else {
+            // ── Cash murni ──
+            if ((int) $request->bayar < $totalBayar) {
+                DB::rollBack();
+
+                return back()->with(
+                    'error',
+                    'Jumlah bayar kurang. Total yang harus dibayar adalah Rp ' . number_format($totalBayar, 0, ',', '.')
+                );
+            }
+
+            $bayar     = (int) $request->bayar;
+            $kembalian = $bayar - $totalBayar;
         }
-
-        $kembalian = (int) $request->bayar - $totalBayar;
 
         $pesanan->update([
             'status'            => 'sudah_bayar',
@@ -429,11 +453,13 @@ public function bayar(Request $request, $id)
             'pajak'             => $pajak,
             'biaya_card'        => $biayaCard,
             'total_bayar'       => $totalBayar,
-            'bayar'             => (int) $request->bayar,
+            'bayar'             => $bayar,
+            'bayar_cash'        => $bayarCash,
+            'bayar_elektronik'  => $bayarElektronik,
             'kembalian'         => $kembalian,
         ]);
 
- $this->refreshMejaStatus($pesanan->id_meja);
+        $this->refreshMejaStatus($pesanan->id_meja);
 
         DB::commit();
 

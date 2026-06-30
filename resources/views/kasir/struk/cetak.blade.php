@@ -199,10 +199,6 @@ Change : Rp{{ number_format($kembalian, 0, ',', '.') }}
 </div>
 
 <div class="action">
-    <button type="button" class="btn btn-back" onclick="history.back()">
-        Kembali
-    </button>
-
     <button type="button" class="btn btn-data" onclick="window.location.href='{{ route('pesanan.index') }}'">
         Data Pesanan
     </button>
