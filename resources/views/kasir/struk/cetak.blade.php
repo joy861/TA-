@@ -21,10 +21,23 @@
             box-sizing: border-box;
         }
 
+        .struk .title {
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 1.5;
+            margin: 0 0 6px;
+            white-space: normal;
+            width: 100%;
+            display: inline-block;
+            color: #000000;
+        }
+
         pre {
             font-family: 'Courier New', monospace;
-            font-size: 20px;
-            font-weight: 700;
+            text-align: left;
+            font-size: 16px;
             line-height: 1.6;
             width: 36ch;
             margin: 0;
@@ -101,10 +114,15 @@
 @endphp
 
 <div class="struk">
-<pre>
-====================================
-   PANDE HILL GARDEN VIEW
-  Garden View Restaurant
+    <pre>====================================</pre>
+    <div class="title">
+        <div>THE PANDE HILL</div>
+        <div>JL. RAYA ULUWATU 188</div>
+        <div>KEL PECATU KEC PECATU</div>
+        <div>KUTA SELATAN</div>
+        <div>BADUNG</div>
+    </div>
+    <pre>
 ====================================
 Date     : {{ \Carbon\Carbon::parse($pesanan->created_at)->timezone('Asia/Makassar')->format('d/m/Y H:i') }}
 Table   : {{ $pesanan->meja->nomor_meja ?? '-' }}
