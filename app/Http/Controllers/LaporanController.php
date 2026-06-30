@@ -153,4 +153,27 @@ class LaporanController extends Controller
             $filter
         ));
     }
+    public function destroy($id)
+{
+    DB::beginTransaction();
+
+    try {
+        $pesanan = Pesanan::where('status', 'sudah_bayar')
+            ->findOrFail($id);
+
+        // Hapus detail pesanan dulu agar tidak error foreign key
+        $pesanan->detailPesanan()->delete();
+
+        // Hapus pesanan / transaksi lunas
+        $pesanan->delete();
+
+        DB::commit();
+
+        return back()->with('success', 'Laporan transaksi lunas berhasil dihapus.');
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        return back()->with('error', 'Gagal menghapus laporan: ' . $e->getMessage());
+    }
+}
 }

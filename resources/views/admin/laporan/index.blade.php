@@ -77,6 +77,7 @@
             <i class="bi bi-cash-stack"></i>
             Laporan Penjualan
         </button>
+
         <button type="button" data-report-tab="terlaris" onclick="showReportTab('terlaris')"
                 class="laporan-tab-btn inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-black transition-all"
                 style="border:none; background:#eef2ff; color:#1e3a5f;">
@@ -90,6 +91,7 @@
 <div class="rounded-2xl p-5 mb-5" style="background:#fff; border:1px solid rgba(30,58,95,0.08);">
     <form action="{{ route('laporan.filter') }}" method="POST" id="formLaporan">
         @csrf
+
         <input type="hidden" name="active_tab" id="active_tab" value="{{ $activeTab }}">
         <input type="hidden" name="periode" id="periode" value="{{ $periode }}">
 
@@ -100,6 +102,7 @@
                     Periode aktif: <span style="color:#1e3a5f;">{{ $periodeText }}</span> · {{ $periodeLabel }}
                 </p>
             </div>
+
             <span class="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold"
                   style="background:#eef2ff; color:#1e3a5f;">
                 <i class="bi bi-calendar-range"></i> {{ $periodeText }}
@@ -122,12 +125,14 @@
                        class="w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-all"
                        style="border:1.5px solid rgba(30,58,95,0.12); color:#1e3a5f;">
             </div>
+
             <div>
                 <label class="block text-xs font-bold tracking-widest uppercase mb-2" style="color:rgba(30,58,95,0.45);">Tanggal Akhir</label>
                 <input type="date" name="tanggal_akhir" id="tanggal_akhir" value="{{ $tanggalAkhir }}"
                        class="w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-all"
                        style="border:1.5px solid rgba(30,58,95,0.12); color:#1e3a5f;">
             </div>
+
             <div class="flex items-end">
                 <button type="submit"
                         class="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all"
@@ -148,6 +153,7 @@
             <div class="text-4xl font-black" style="color:#1e3a5f; letter-spacing:-1px;">{{ $totalTransaksi }}</div>
             <div class="text-xs mt-1 font-semibold" style="color:rgba(30,58,95,0.4);">{{ $periodeText }}</div>
         </div>
+
         <div class="rounded-2xl p-5" style="background:#1e3a5f;">
             <div class="text-xs font-bold tracking-widest mb-2" style="color:rgba(255,255,255,0.4); letter-spacing:0.12em;">TOTAL PENDAPATAN</div>
             <div class="font-black leading-tight" style="color:#fff; letter-spacing:-1px;">
@@ -162,6 +168,7 @@
     <div class="rounded-2xl p-5 mb-5" style="background:#fff; border:1px solid rgba(30,58,95,0.08);">
         <h3 class="text-sm font-black mb-0.5" style="color:#1e3a5f;">Breakdown Pembayaran</h3>
         <p class="text-xs mb-4" style="color:rgba(30,58,95,0.4);">Pendapatan berdasarkan metode pembayaran (sudah termasuk service)</p>
+
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div class="rounded-xl p-4" style="border:1.5px solid rgba(30,58,95,0.08); background:#eef2ff;">
                 <div class="flex items-center gap-3 mb-3">
@@ -171,6 +178,7 @@
                 <div class="text-2xl font-black mb-1" style="color:#1e3a5f;">Rp {{ number_format($totalTunai, 0, ',', '.') }}</div>
                 <div class="text-xs font-semibold" style="color:rgba(30,58,95,0.5);">{{ $jumlahTunai }} transaksi</div>
             </div>
+
             <div class="rounded-xl p-4" style="border:1.5px solid rgba(30,58,95,0.08); background:#eef2ff;">
                 <div class="flex items-center gap-3 mb-3">
                     <div class="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black" style="background:#60a5fa; color:#1e3a5f;">QR</div>
@@ -179,9 +187,12 @@
                 <div class="text-2xl font-black mb-1" style="color:#1e3a5f;">Rp {{ number_format($totalQris, 0, ',', '.') }}</div>
                 <div class="text-xs font-semibold" style="color:rgba(30,58,95,0.5);">{{ $jumlahQris }} transaksi</div>
             </div>
+
             <div class="rounded-xl p-4" style="border:1.5px solid rgba(30,58,95,0.08); background:#eef2ff;">
                 <div class="flex items-center gap-3 mb-3">
-                    <div class="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black" style="background:rgba(99,102,241,0.15); color:#6366f1;"><i class="bi bi-credit-card-2-front"></i></div>
+                    <div class="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black" style="background:rgba(99,102,241,0.15); color:#6366f1;">
+                        <i class="bi bi-credit-card-2-front"></i>
+                    </div>
                     <span class="text-sm font-black" style="color:#1e3a5f;">Card</span>
                 </div>
                 <div class="text-2xl font-black mb-1" style="color:#1e3a5f;">Rp {{ number_format($totalCard, 0, ',', '.') }}</div>
@@ -197,8 +208,12 @@
                 <h3 class="text-sm font-black" style="color:#1e3a5f;">Detail Transaksi</h3>
                 <p class="text-xs mt-0.5" style="color:rgba(30,58,95,0.4);">{{ $periodeLabel }}</p>
             </div>
-            <span class="text-xs font-bold px-3 py-1.5 rounded-lg" style="background:#eef2ff; color:#1e3a5f;">{{ $totalTransaksi }} transaksi</span>
+
+            <span class="text-xs font-bold px-3 py-1.5 rounded-lg" style="background:#eef2ff; color:#1e3a5f;">
+                {{ $totalTransaksi }} transaksi
+            </span>
         </div>
+
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>
@@ -211,61 +226,142 @@
                         <th class="text-right px-5 py-3 text-xs font-bold tracking-widest uppercase" style="color:rgba(30,58,95,0.35);">Subtotal</th>
                         <th class="text-right px-5 py-3 text-xs font-bold tracking-widest uppercase" style="color:rgba(30,58,95,0.35);">Service</th>
                         <th class="text-right px-5 py-3 text-xs font-bold tracking-widest uppercase" style="color:rgba(30,58,95,0.35);">Total</th>
+                        <th class="text-center px-5 py-3 text-xs font-bold tracking-widest uppercase" style="color:rgba(30,58,95,0.35);">Aksi</th>
                     </tr>
                 </thead>
+
                 <tbody>
                     @forelse($pesanan as $p)
-                    @php
-                        $pSubtotal  = $p->total_harga ?? 0;
-                        $pPajak     = $p->pajak ?? round($pSubtotal * 0.07);
-                        $pBiayaCard = $p->biaya_card ?? 0;
-                        $pTotal     = $p->total_bayar ?? ($pSubtotal + $pPajak + $pBiayaCard);
-                    @endphp
-                    <tr style="border-bottom:1px solid rgba(30,58,95,0.04);">
-                        <td class="px-5 py-3.5 text-xs" style="color:rgba(30,58,95,0.35);">{{ $loop->iteration }}</td>
-                        <td class="px-5 py-3.5 text-xs font-semibold" style="color:rgba(30,58,95,0.5);">{{ $p->tanggal }}</td>
-                        <td class="px-5 py-3.5 font-black" style="color:#1e3a5f;">Meja {{ $p->meja->nomor_meja ?? '-' }}</td>
-                        <td class="px-5 py-3.5 font-semibold" style="color:rgba(30,58,95,0.6);">{{ $p->user->nama ?? '-' }}</td>
-                        <td class="px-5 py-3.5">
-                            @if($p->metode_pembayaran == 'cash')
-                                <span class="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full" style="background:rgba(34,197,94,0.1); color:#15803d;"><span class="w-1.5 h-1.5 rounded-full" style="background:#22c55e;"></span> Tunai</span>
-                            @elseif($p->metode_pembayaran == 'qris')
-                                <span class="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full" style="background:#eef2ff; color:#1e3a5f;"><span class="w-1.5 h-1.5 rounded-full" style="background:#60a5fa;"></span> QRIS</span>
-                            @elseif($p->metode_pembayaran == 'card')
-                                <span class="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full" style="background:rgba(99,102,241,0.1); color:#6366f1;"><span class="w-1.5 h-1.5 rounded-full" style="background:#6366f1;"></span> Card</span>
-                            @else
-                                <span class="text-xs font-semibold px-2.5 py-1 rounded-full" style="background:#eef2ff; color:rgba(30,58,95,0.5);">-</span>
-                            @endif
-                        </td>
-                        <td class="px-5 py-3.5 text-right font-semibold" style="color:rgba(30,58,95,0.6);">Rp {{ number_format($pSubtotal, 0, ',', '.') }}</td>
-                        <td class="px-5 py-3.5 text-right font-semibold" style="color:rgba(30,58,95,0.6);">Rp {{ number_format($pPajak + $pBiayaCard, 0, ',', '.') }}</td>
-                        <td class="px-5 py-3.5 text-right font-black" style="color:#1e3a5f;">Rp {{ number_format($pTotal, 0, ',', '.') }}</td>
-                    </tr>
+                        @php
+                            $pSubtotal  = $p->total_harga ?? 0;
+                            $pPajak     = $p->pajak ?? round($pSubtotal * 0.07);
+                            $pBiayaCard = $p->biaya_card ?? 0;
+                            $pTotal     = $p->total_bayar ?? ($pSubtotal + $pPajak + $pBiayaCard);
+
+                            $isSplit = in_array($p->metode_pembayaran, ['qris', 'card'])
+                                && (($p->bayar_cash ?? 0) > 0)
+                                && (($p->bayar_elektronik ?? 0) > 0);
+                        @endphp
+
+                        <tr style="border-bottom:1px solid rgba(30,58,95,0.04);">
+                            <td class="px-5 py-3.5 text-xs" style="color:rgba(30,58,95,0.35);">
+                                {{ $loop->iteration }}
+                            </td>
+
+                            <td class="px-5 py-3.5 text-xs font-semibold" style="color:rgba(30,58,95,0.5);">
+                                {{ $p->tanggal }}
+                            </td>
+
+                            <td class="px-5 py-3.5 font-black" style="color:#1e3a5f;">
+                                Meja {{ $p->meja->nomor_meja ?? '-' }}
+                            </td>
+
+                            <td class="px-5 py-3.5 font-semibold" style="color:rgba(30,58,95,0.6);">
+                                {{ $p->user->nama ?? '-' }}
+                            </td>
+
+                            <td class="px-5 py-3.5">
+                                @if($isSplit && $p->metode_pembayaran == 'qris')
+                                    <span class="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full" style="background:#eef2ff; color:#1e3a5f;">
+                                        <span class="w-1.5 h-1.5 rounded-full" style="background:#60a5fa;"></span>
+                                        Split Cash + QRIS
+                                    </span>
+                                @elseif($isSplit && $p->metode_pembayaran == 'card')
+                                    <span class="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full" style="background:rgba(99,102,241,0.1); color:#6366f1;">
+                                        <span class="w-1.5 h-1.5 rounded-full" style="background:#6366f1;"></span>
+                                        Split Cash + Card
+                                    </span>
+                                @elseif($p->metode_pembayaran == 'cash')
+                                    <span class="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full" style="background:rgba(34,197,94,0.1); color:#15803d;">
+                                        <span class="w-1.5 h-1.5 rounded-full" style="background:#22c55e;"></span>
+                                        Tunai
+                                    </span>
+                                @elseif($p->metode_pembayaran == 'qris')
+                                    <span class="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full" style="background:#eef2ff; color:#1e3a5f;">
+                                        <span class="w-1.5 h-1.5 rounded-full" style="background:#60a5fa;"></span>
+                                        QRIS
+                                    </span>
+                                @elseif($p->metode_pembayaran == 'card')
+                                    <span class="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full" style="background:rgba(99,102,241,0.1); color:#6366f1;">
+                                        <span class="w-1.5 h-1.5 rounded-full" style="background:#6366f1;"></span>
+                                        Card
+                                    </span>
+                                @else
+                                    <span class="text-xs font-semibold px-2.5 py-1 rounded-full" style="background:#eef2ff; color:rgba(30,58,95,0.5);">
+                                        -
+                                    </span>
+                                @endif
+                            </td>
+
+                            <td class="px-5 py-3.5 text-right font-semibold" style="color:rgba(30,58,95,0.6);">
+                                Rp {{ number_format($pSubtotal, 0, ',', '.') }}
+                            </td>
+
+                            <td class="px-5 py-3.5 text-right font-semibold" style="color:rgba(30,58,95,0.6);">
+                                Rp {{ number_format($pPajak + $pBiayaCard, 0, ',', '.') }}
+                            </td>
+
+                            <td class="px-5 py-3.5 text-right font-black" style="color:#1e3a5f;">
+                                Rp {{ number_format($pTotal, 0, ',', '.') }}
+                            </td>
+
+                            <td class="px-5 py-3.5 text-center">
+                                <form action="{{ route('laporan.destroy', $p->id_pesanan) }}"
+                                      method="POST"
+                                      class="form-hapus-laporan">
+                                    @csrf
+                                    @method('DELETE')
+
+                                    <button type="submit"
+                                            class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all"
+                                            style="background:#fff1f2; color:#dc2626; border:none; cursor:pointer;"
+                                            onmouseover="this.style.background='#dc2626'; this.style.color='#fff';"
+                                            onmouseout="this.style.background='#fff1f2'; this.style.color='#dc2626';">
+                                        <i class="bi bi-trash"></i>
+                                        Hapus
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
                     @empty
-                    <tr>
-                        <td colspan="8" class="px-5 py-12 text-center text-sm" style="color:rgba(30,58,95,0.3);">
-                            <i class="bi bi-calendar-x text-3xl block mb-2"></i>
-                            Tidak ada {{ $periodeText }}
-                        </td>
-                    </tr>
+                        <tr>
+                            <td colspan="9" class="px-5 py-12 text-center text-sm" style="color:rgba(30,58,95,0.3);">
+                                <i class="bi bi-calendar-x text-3xl block mb-2"></i>
+                                Tidak ada {{ $periodeText }}
+                            </td>
+                        </tr>
                     @endforelse
                 </tbody>
+
                 @if($pesanan->count() > 0)
-                <tfoot>
-                    <tr style="background:#eef2ff; border-top:2px solid rgba(30,58,95,0.1);">
-                        <td colspan="5" class="px-5 py-3.5 text-sm font-black" style="color:#1e3a5f;">Total Keseluruhan</td>
-                        <td class="px-5 py-3.5 text-right font-semibold text-sm" style="color:rgba(30,58,95,0.6);">Rp {{ number_format($pesanan->sum('total_harga'), 0, ',', '.') }}</td>
-                        <td class="px-5 py-3.5 text-right font-semibold text-sm" style="color:rgba(30,58,95,0.6);">Rp {{ number_format($pesanan->sum(fn($p) => ($p->pajak ?? round($p->total_harga * 0.07)) + ($p->biaya_card ?? 0)), 0, ',', '.') }}</td>
-                        <td class="px-5 py-3.5 text-right font-black text-base" style="color:#1e3a5f;">Rp {{ number_format($totalPendapatan, 0, ',', '.') }}</td>
-                    </tr>
-                </tfoot>
+                    <tfoot>
+                        <tr style="background:#eef2ff; border-top:2px solid rgba(30,58,95,0.1);">
+                            <td colspan="5" class="px-5 py-3.5 text-sm font-black" style="color:#1e3a5f;">
+                                Total Keseluruhan
+                            </td>
+
+                            <td class="px-5 py-3.5 text-right font-semibold text-sm" style="color:rgba(30,58,95,0.6);">
+                                Rp {{ number_format($pesanan->sum('total_harga'), 0, ',', '.') }}
+                            </td>
+
+                            <td class="px-5 py-3.5 text-right font-semibold text-sm" style="color:rgba(30,58,95,0.6);">
+                                Rp {{ number_format($pesanan->sum(fn($p) => ($p->pajak ?? round($p->total_harga * 0.07)) + ($p->biaya_card ?? 0)), 0, ',', '.') }}
+                            </td>
+
+                            <td class="px-5 py-3.5 text-right font-black text-base" style="color:#1e3a5f;">
+                                Rp {{ number_format($totalPendapatan, 0, ',', '.') }}
+                            </td>
+
+                            <td class="px-5 py-3.5"></td>
+                        </tr>
+                    </tfoot>
                 @endif
             </table>
         </div>
     </div>
 </div>
 
-{{-- PANEL Produk TERLARIS --}}
+{{-- PANEL PRODUK TERLARIS --}}
 <div id="panel-terlaris" class="laporan-panel" style="display:none;">
     <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:12px;">
         <div class="rounded-2xl p-5" style="background:#fff; border:1px solid rgba(30,58,95,0.08);">
@@ -273,6 +369,7 @@
             <div class="text-4xl font-black" style="color:#1e3a5f; letter-spacing:-1px;">{{ $totalItemTerjual }}</div>
             <div class="text-xs mt-1 font-semibold" style="color:rgba(30,58,95,0.4);">total porsi/item terjual</div>
         </div>
+
         <div class="rounded-2xl p-5" style="background:#60a5fa;">
             <div class="text-xs font-bold tracking-widest mb-2" style="color:rgba(30,58,95,0.55); letter-spacing:0.12em;">MENU PALING LARIS</div>
             <div class="text-2xl font-black leading-tight" style="color:#1e3a5f; letter-spacing:-0.5px;">{{ $menuPalingLaris->nama_menu ?? '-' }}</div>
@@ -280,6 +377,7 @@
                 {{ $menuPalingLaris ? number_format($menuPalingLaris->total_terjual, 0, ',', '.') . ' terjual' : 'belum ada transaksi' }}
             </div>
         </div>
+
         <div class="rounded-2xl p-5" style="background:#1e3a5f;">
             <div class="text-xs font-bold tracking-widest mb-2" style="color:rgba(255,255,255,0.4); letter-spacing:0.12em;">PENDAPATAN MENU</div>
             <div class="font-black leading-tight" style="color:#fff; letter-spacing:-1px;">
@@ -296,8 +394,10 @@
                 <h3 class="text-sm font-black" style="color:#1e3a5f;">Ranking Produk Terlaris</h3>
                 <p class="text-xs mt-0.5" style="color:rgba(30,58,95,0.4);">Berdasarkan transaksi sudah bayar pada {{ $periodeLabel }}</p>
             </div>
+
             <span class="text-xs font-bold px-3 py-1.5 rounded-lg" style="background:#eef2ff; color:#1e3a5f;">{{ $menuTerlaris->count() }} menu</span>
         </div>
+
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>
@@ -310,41 +410,49 @@
                         <th class="text-right px-5 py-3 text-xs font-bold tracking-widest uppercase" style="color:rgba(30,58,95,0.35);">Total Pendapatan</th>
                     </tr>
                 </thead>
+
                 <tbody>
                     @forelse($menuTerlaris as $item)
-                    <tr style="border-bottom:1px solid rgba(30,58,95,0.04);">
-                        <td class="px-5 py-3.5">
-                            <span class="inline-flex items-center justify-center w-8 h-8 rounded-xl text-xs font-black" style="background:{{ $loop->iteration <= 3 ? '#1e3a5f' : '#eef2ff' }}; color:{{ $loop->iteration <= 3 ? '#fff' : '#1e3a5f' }};">{{ $loop->iteration }}</span>
-                        </td>
-                        <td class="px-5 py-3.5 font-black" style="color:#1e3a5f;">{{ $item->nama_menu }}</td>
-                        <td class="px-5 py-3.5 font-semibold" style="color:rgba(30,58,95,0.55);">{{ $item->nama_kategori ?? '-' }}</td>
-                        <td class="px-5 py-3.5 text-right font-black" style="color:#1e3a5f;">{{ number_format($item->total_terjual, 0, ',', '.') }}</td>
-                        <td class="px-5 py-3.5 text-right font-semibold" style="color:rgba(30,58,95,0.6);">{{ number_format($item->total_transaksi, 0, ',', '.') }}</td>
-                        <td class="px-5 py-3.5 text-right font-black" style="color:#1e3a5f;">Rp {{ number_format($item->total_pendapatan, 0, ',', '.') }}</td>
-                    </tr>
+                        <tr style="border-bottom:1px solid rgba(30,58,95,0.04);">
+                            <td class="px-5 py-3.5">
+                                <span class="inline-flex items-center justify-center w-8 h-8 rounded-xl text-xs font-black"
+                                      style="background:{{ $loop->iteration <= 3 ? '#1e3a5f' : '#eef2ff' }}; color:{{ $loop->iteration <= 3 ? '#fff' : '#1e3a5f' }};">
+                                    {{ $loop->iteration }}
+                                </span>
+                            </td>
+
+                            <td class="px-5 py-3.5 font-black" style="color:#1e3a5f;">{{ $item->nama_menu }}</td>
+                            <td class="px-5 py-3.5 font-semibold" style="color:rgba(30,58,95,0.55);">{{ $item->nama_kategori ?? '-' }}</td>
+                            <td class="px-5 py-3.5 text-right font-black" style="color:#1e3a5f;">{{ number_format($item->total_terjual, 0, ',', '.') }}</td>
+                            <td class="px-5 py-3.5 text-right font-semibold" style="color:rgba(30,58,95,0.6);">{{ number_format($item->total_transaksi, 0, ',', '.') }}</td>
+                            <td class="px-5 py-3.5 text-right font-black" style="color:#1e3a5f;">Rp {{ number_format($item->total_pendapatan, 0, ',', '.') }}</td>
+                        </tr>
                     @empty
-                    <tr>
-                        <td colspan="6" class="px-5 py-12 text-center text-sm" style="color:rgba(30,58,95,0.3);">
-                            <i class="bi bi-trophy text-3xl block mb-2"></i>
-                            Belum ada data menu terjual pada periode ini
-                        </td>
-                    </tr>
+                        <tr>
+                            <td colspan="6" class="px-5 py-12 text-center text-sm" style="color:rgba(30,58,95,0.3);">
+                                <i class="bi bi-trophy text-3xl block mb-2"></i>
+                                Belum ada data menu terjual pada periode ini
+                            </td>
+                        </tr>
                     @endforelse
                 </tbody>
+
                 @if($menuTerlaris->count() > 0)
-                <tfoot>
-                    <tr style="background:#eef2ff; border-top:2px solid rgba(30,58,95,0.1);">
-                        <td colspan="3" class="px-5 py-3.5 text-sm font-black" style="color:#1e3a5f;">Total Keseluruhan</td>
-                        <td class="px-5 py-3.5 text-right font-black text-sm" style="color:#1e3a5f;">{{ number_format($totalItemTerjual, 0, ',', '.') }}</td>
-                        <td class="px-5 py-3.5 text-right font-semibold text-sm" style="color:rgba(30,58,95,0.6);">-</td>
-                        <td class="px-5 py-3.5 text-right font-black text-base" style="color:#1e3a5f;">Rp {{ number_format($totalPendapatanMenu, 0, ',', '.') }}</td>
-                    </tr>
-                </tfoot>
+                    <tfoot>
+                        <tr style="background:#eef2ff; border-top:2px solid rgba(30,58,95,0.1);">
+                            <td colspan="3" class="px-5 py-3.5 text-sm font-black" style="color:#1e3a5f;">Total Keseluruhan</td>
+                            <td class="px-5 py-3.5 text-right font-black text-sm" style="color:#1e3a5f;">{{ number_format($totalItemTerjual, 0, ',', '.') }}</td>
+                            <td class="px-5 py-3.5 text-right font-semibold text-sm" style="color:rgba(30,58,95,0.6);">-</td>
+                            <td class="px-5 py-3.5 text-right font-black text-base" style="color:#1e3a5f;">Rp {{ number_format($totalPendapatanMenu, 0, ',', '.') }}</td>
+                        </tr>
+                    </tfoot>
                 @endif
             </table>
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
     function showReportTab(tab) {
@@ -374,6 +482,7 @@
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
+
         return `${year}-${month}-${day}`;
     }
 
@@ -407,6 +516,7 @@
 
         awalInput.value = formatDate(start);
         akhirInput.value = formatDate(end);
+
         updatePeriodeButton();
     }
 
@@ -415,6 +525,7 @@
 
         document.querySelectorAll('.periode-btn').forEach(btn => {
             const isActive = btn.dataset.periode === periode;
+
             btn.style.background = isActive ? '#1e3a5f' : '#eef2ff';
             btn.style.color = isActive ? '#fff' : '#1e3a5f';
             btn.style.border = 'none';
@@ -435,6 +546,47 @@
                 updatePeriodeButton();
             });
         });
+
+        document.querySelectorAll('.form-hapus-laporan').forEach(form => {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                Swal.fire({
+                    title: 'Hapus Laporan?',
+                    text: 'Data transaksi lunas dan detail pesanan akan ikut terhapus.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc2626',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: 'Ya, Hapus',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true,
+                    focusCancel: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            });
+        });
+
+        @if(session('success'))
+            Swal.fire({
+                title: 'Berhasil',
+                text: @json(session('success')),
+                icon: 'success',
+                confirmButtonColor: '#1e3a5f'
+            });
+        @endif
+
+        @if(session('error'))
+            Swal.fire({
+                title: 'Gagal',
+                text: @json(session('error')),
+                icon: 'error',
+                confirmButtonColor: '#dc2626'
+            });
+        @endif
     });
 </script>
 

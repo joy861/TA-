@@ -438,6 +438,168 @@
         min-width: 0;
     }
 
+    .delete-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(8, 20, 43, 0.62);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 99999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.25s ease;
+}
+
+.delete-modal-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.delete-modal-box {
+    width: 100%;
+    max-width: 420px;
+    background: #ffffff;
+    border-radius: 28px;
+    padding: 34px 28px 26px;
+    text-align: center;
+    box-shadow: 0 30px 80px rgba(8, 20, 43, 0.28);
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    transform: translateY(20px) scale(0.96);
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.delete-modal-overlay.show .delete-modal-box {
+    transform: translateY(0) scale(1);
+}
+
+.delete-modal-box::before {
+    content: '';
+    position: absolute;
+    width: 180px;
+    height: 180px;
+    border-radius: 999px;
+    background: rgba(239, 68, 68, 0.08);
+    top: -90px;
+    right: -90px;
+}
+
+.delete-modal-icon {
+    width: 82px;
+    height: 82px;
+    margin: 0 auto 20px;
+    border-radius: 999px;
+    background: #fff1f2;
+    border: 4px solid #fecaca;
+    color: #ef4444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 34px;
+    position: relative;
+    z-index: 2;
+}
+
+.delete-modal-title {
+    font-size: 26px;
+    font-weight: 900;
+    color: #1e3a5f;
+    margin-bottom: 10px;
+    letter-spacing: -0.04em;
+    position: relative;
+    z-index: 2;
+}
+
+.delete-modal-text {
+    font-size: 15px;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 8px;
+    position: relative;
+    z-index: 2;
+}
+
+.delete-modal-subtext {
+    font-size: 13px;
+    color: #7188a7;
+    line-height: 1.6;
+    margin-bottom: 24px;
+    position: relative;
+    z-index: 2;
+}
+
+.delete-modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    position: relative;
+    z-index: 2;
+}
+
+.delete-btn {
+    border: none;
+    border-radius: 16px;
+    padding: 13px 20px;
+    min-width: 120px;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.delete-btn-cancel {
+    background: #eef2f7;
+    color: #475569;
+}
+
+.delete-btn-cancel:hover {
+    background: #e2e8f0;
+}
+
+.delete-btn-submit {
+    background: linear-gradient(135deg, #ef4444, #b91c1c);
+    color: #ffffff;
+    box-shadow: 0 14px 30px rgba(239, 68, 68, 0.24);
+}
+
+.delete-btn-submit:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 18px 35px rgba(239, 68, 68, 0.30);
+}
+
+.btn-aksi-hapus {
+    background: rgba(239,68,68,0.10);
+    color: #dc2626;
+}
+
+.btn-aksi-hapus:hover {
+    background: #dc2626;
+    color: #fff;
+}
+
+@media (max-width: 576px) {
+    .delete-modal-box {
+        padding: 28px 20px 22px;
+        border-radius: 22px;
+    }
+
+    .delete-modal-title {
+        font-size: 22px;
+    }
+
+    .delete-modal-actions {
+        flex-direction: column-reverse;
+    }
+
+    .delete-btn {
+        width: 100%;
+    }
+}
+
     .meja-number {
         width: 30px;
         height: 30px;
@@ -709,6 +871,10 @@
                                 ? route('pesanan.edit', $id)
                                 : url('kasir/pesanan/' . $id . '/edit');
 
+                                $deleteUrl = \Illuminate\Support\Facades\Route::has('pesanan.destroy')
+    ? route('pesanan.destroy', $id)
+    : url('pesanan/' . $id);
+
                             $bayarUrl = \Illuminate\Support\Facades\Route::has('pesanan.bayar')
                                 ? route('pesanan.bayar', $id)
                                 : (\Illuminate\Support\Facades\Route::has('transaksi.bayar')
@@ -753,24 +919,29 @@
                             @endif
                         </td>
                         <td class="aksi-cell">
-                            <div class="aksi-group">
-                                @if($isPaid)
-                                    <a href="{{ $cetakUrl }}" class="btn-aksi btn-aksi-cetak" target="_blank">
-                                        <i class="bi bi-printer"></i> Cetak Struk
-                                    </a>
-                                    <span class="lunas-note">Lunas ✓</span>
-                                @else
-                                    <a href="{{ $detailUrl }}" class="btn-aksi btn-aksi-detail">
-                                        <i class="bi bi-eye"></i> Detail
-                                    </a>
-                                    <a href="{{ $editUrl }}" class="btn-aksi btn-aksi-edit">
-                                        <i class="bi bi-pencil"></i> Edit
-                                    </a>
-                                    <a href="{{ $bayarUrl }}" class="btn-aksi btn-aksi-bayar">
-                                        <i class="bi bi-cash-coin"></i> Bayar
-                                    </a>
-                                @endif
-                            </div>
+ <div class="aksi-group">
+    @if($isPaid)
+        <a href="{{ $cetakUrl }}" class="btn-aksi btn-aksi-cetak" target="_blank">
+            <i class="bi bi-printer"></i> Cetak Struk
+        </a>
+        <span class="lunas-note">Lunas ✓</span>
+    @else
+        <a href="{{ $detailUrl }}" class="btn-aksi btn-aksi-detail">
+            <i class="bi bi-eye"></i> Detail
+        </a>
+        <a href="{{ $editUrl }}" class="btn-aksi btn-aksi-edit">
+            <i class="bi bi-pencil"></i> Edit
+        </a>
+        <a href="{{ $bayarUrl }}" class="btn-aksi btn-aksi-bayar">
+            <i class="bi bi-cash-coin"></i> Bayar
+        </a>
+        <button type="button"
+                class="btn-aksi btn-aksi-hapus"
+                onclick="openDeleteModal('{{ $deleteUrl }}', 'Meja {{ $meja }}')">
+            <i class="bi bi-trash3"></i> Hapus
+        </button>
+    @endif
+</div>
                         </td>
                     </tr>
                 @empty
@@ -802,5 +973,63 @@
         </div>
     @endif
 </div>
+<div id="deleteConfirmModal" class="delete-modal-overlay">
+    <div class="delete-modal-box">
+        <div class="delete-modal-icon">
+            <i class="bi bi-trash3"></i>
+        </div>
 
+        <h3 class="delete-modal-title">Hapus Pesanan?</h3>
+
+        <p class="delete-modal-text" id="deleteModalMejaText">
+            Yakin ingin menghapus pesanan ini?
+        </p>
+
+        <p class="delete-modal-subtext">
+            Data pesanan dan detail menunya akan dihapus permanen dan tidak dapat dikembalikan.
+        </p>
+
+        <div class="delete-modal-actions">
+            <button type="button" class="delete-btn delete-btn-cancel" onclick="closeDeleteModal()">
+                Batal
+            </button>
+
+            <form id="deleteForm" method="POST" style="margin:0;">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="delete-btn delete-btn-submit">
+                    Ya, Hapus
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openDeleteModal(url, mejaLabel) {
+        const modal = document.getElementById('deleteConfirmModal');
+        const form  = document.getElementById('deleteForm');
+        const text  = document.getElementById('deleteModalMejaText');
+
+        form.action = url;
+        text.textContent = `Yakin ingin menghapus pesanan ${mejaLabel}?`;
+
+        modal.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeDeleteModal() {
+        const modal = document.getElementById('deleteConfirmModal');
+        modal.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+
+    document.getElementById('deleteConfirmModal')?.addEventListener('click', function (e) {
+        if (e.target === this) closeDeleteModal();
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeDeleteModal();
+    });
+</script>
 @endsection

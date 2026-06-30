@@ -904,6 +904,10 @@
         ? route('pesanan.index')
         : url('pesanan');
 
+    $mejaUrl = \Illuminate\Support\Facades\Route::has('kasir.meja.index')
+        ? route('kasir.meja.index')
+        : url('kasir/meja');
+
     $logoutUrl = \Illuminate\Support\Facades\Route::has('logout')
         ? route('logout')
         : url('logout');
@@ -934,6 +938,12 @@
         request()->is('pesanan/*/bayar') ||
         request()->is('transaksi/*') ||
         request()->is('struk/*');
+
+    $mejaActive =
+        request()->routeIs('kasir.meja.index') ||
+        request()->routeIs('kasir.meja.*') ||
+        request()->is('kasir/meja') ||
+        request()->is('kasir/meja/*');
 @endphp
 
 <header class="kasir-topbar sticky top-0 z-40">
@@ -964,6 +974,11 @@
                 <a href="{{ $dataPesananUrl }}" class="kasir-nav-link {{ $dataPesananActive ? 'active' : '' }}">
                     <i class="bi bi-receipt"></i>
                     <span>Data Pesanan</span>
+                </a>
+
+                <a href="{{ $mejaUrl }}" class="kasir-nav-link {{ $mejaActive ? 'active' : '' }}">
+                    <i class="bi bi-grid-3x3-gap"></i>
+                    <span>Meja</span>
                 </a>
             </nav>
 
@@ -1045,6 +1060,11 @@
     <a href="{{ $dataPesananUrl }}" class="kasir-mobile-menu-item {{ $dataPesananActive ? 'active' : '' }}">
         <i class="bi bi-receipt"></i>
         <span>Data Pesanan</span>
+    </a>
+
+    <a href="{{ $mejaUrl }}" class="kasir-mobile-menu-item {{ $mejaActive ? 'active' : '' }}">
+        <i class="bi bi-grid-3x3-gap"></i>
+        <span>Meja</span>
     </a>
 
     <div class="kasir-mobile-menu-divider"></div>

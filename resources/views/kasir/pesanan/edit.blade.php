@@ -638,35 +638,54 @@
     @method('PUT')
 
     <div class="space-y-5">
-        <div class="kasir-card meja-card-clean">
-            <div class="flex items-start justify-between gap-4 mb-4">
-                <div>
-                    <h2 class="kasir-section-title">Pilih Meja</h2>
-                    <div class="kasir-section-subtitle">Meja pesanan yang sedang diedit</div>
-                </div>
-                <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background:#eef2ff;">
-                    <i class="bi bi-grid-3x3-gap" style="color:#1e3a5f;"></i>
-                </div>
-            </div>
-            <div class="meja-select-wrapper">
-                <select name="id_meja" class="kasir-select" required>
-                    @foreach($meja as $m)
-                        <option value="{{ $m->id_meja }}" {{ $pesanan->id_meja == $m->id_meja ? 'selected' : '' }}>
-                            Meja {{ $m->nomor_meja }} — {{ $m->kapasitas }} orang
-                        </option>
-                    @endforeach
-                </select>
-            </div>
+<div class="kasir-card meja-card-clean">
+    <div class="flex items-start justify-between gap-4 mb-4">
+        <div>
+            <h2 class="kasir-section-title">Pilih Meja</h2>
+            <div class="kasir-section-subtitle">Meja pesanan yang sedang diedit</div>
         </div>
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background:#eef2ff;">
+            <i class="bi bi-grid-3x3-gap" style="color:#1e3a5f;"></i>
+        </div>
+    </div>
+
+    <div class="meja-select-wrapper">
+        <select name="id_meja" id="select-meja" class="kasir-select" required onchange="handleMejaChange(this)">
+            @foreach($meja as $m)
+                <option value="{{ $m->id_meja }}"
+                        data-kapasitas="{{ $m->kapasitas }}"
+                        data-terisi="{{ $m->terisi }}"
+                        data-sisa="{{ $m->sisa }}"
+                        {{ $pesanan->id_meja == $m->id_meja ? 'selected' : '' }}>
+                    Meja {{ $m->nomor_meja }} — sisa {{ $m->sisa }} dari {{ $m->kapasitas }} kursi
+                </option>
+            @endforeach
+        </select>
+    </div>
+
+    <div id="jumlah-orang-wrap" class="mt-4">
+        <label class="kasir-form-label">Jumlah Orang</label>
+        <input type="number"
+               name="jumlah_orang"
+               id="input-jumlah-orang"
+               class="kasir-select"
+               min="1"
+               step="1"
+               value="{{ $pesanan->jumlah_orang }}"
+               oninput="validasiJumlahOrang(this)">
+        <div id="sisa-kursi-info" class="text-xs mt-2" style="color:rgba(30,58,95,0.5); font-weight:600;"></div>
+        <div id="jumlah-orang-error" class="text-xs mt-1" style="color:#dc2626; font-weight:700; display:none;"></div>
+    </div>
+</div>
 
         <div class="input-order-layout">
             <div class="menu-workspace kasir-card p-4">
                 <div class="menu-tabs">
-                    <button type="button" class="menu-tab-btn active" data-menu-tab="normal" onclick="switchMenuTab('normal')">
+                    <button type="button" class="menu-tab-btn" data-menu-tab="normal" onclick="switchMenuTab('normal')">
                         <i class="bi bi-person"></i>
                         Customer
                     </button>
-                    <button type="button" class="menu-tab-btn guide-tab" data-menu-tab="guide" onclick="switchMenuTab('guide')">
+                    <button type="button" class="menu-tab-btn guide-tab active" data-menu-tab="guide" onclick="switchMenuTab('guide')">
                         <i class="bi bi-star-fill"></i>
                         Guide
                     </button>
@@ -1182,6 +1201,59 @@
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape') closeConfirmUpdateModal();
     });
+    function handleMejaChange(select) {
+    const input = document.getElementById('input-jumlah-orang');
+    const info  = document.getElementById('sisa-kursi-info');
+    const errEl = document.getElementById('jumlah-orang-error');
+    const opt   = select.options[select.selectedIndex];
+
+    if (!select.value) {
+        input.max = 0;
+        info.textContent = '';
+        return;
+    }
+
+    const sisa = parseInt(opt.dataset.sisa || '0');
+    const kapasitas = parseInt(opt.dataset.kapasitas || '0');
+
+    input.max = sisa;
+    errEl.style.display = 'none';
+    info.textContent = `Sisa kursi tersedia: ${sisa} dari ${kapasitas} kursi`;
+
+    // Kalau jumlah orang saat ini melebihi sisa kursi meja baru, sesuaikan otomatis
+    const val = parseInt(input.value || '0');
+    if (val > sisa) {
+        input.value = sisa;
+        errEl.textContent = `Jumlah orang disesuaikan ke sisa kursi (maksimal ${sisa})`;
+        errEl.style.display = 'block';
+    }
+}
+
+function validasiJumlahOrang(input) {
+    const max   = parseInt(input.max || '0');
+    const errEl = document.getElementById('jumlah-orang-error');
+    const val   = parseInt(input.value || '0');
+
+    if (val > max) {
+        errEl.textContent = `Jumlah orang melebihi sisa kursi (maksimal ${max} orang)`;
+        errEl.style.display = 'block';
+        input.value = max;
+    } else if (input.value !== '' && val < 1) {
+        errEl.textContent = 'Jumlah orang minimal 1';
+        errEl.style.display = 'block';
+        input.value = 1;
+    } else {
+        errEl.style.display = 'none';
+    }
+}
+
+// Inisialisasi info sisa kursi saat halaman pertama kali dimuat
+(function initMejaInfo() {
+    const select = document.getElementById('select-meja');
+    if (select && select.value) {
+        handleMejaChange(select);
+    }
+})();
 </script>
 
 @endsection

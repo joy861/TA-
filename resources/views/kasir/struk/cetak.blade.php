@@ -104,13 +104,46 @@
 <body>
 
 @php
-    $subtotal   = $pesanan->total_harga ?? 0;
-    $metode     = $pesanan->metode_pembayaran ?? 'cash';
-    $pajak      = ($pesanan->pajak > 0) ? $pesanan->pajak : round($subtotal * 0.07);
-    $biayaCard  = ($pesanan->biaya_card > 0) ? $pesanan->biaya_card : ($metode === 'card' ? round(($subtotal + $pajak) * 0.02) : 0);
-    $totalBayar = ($pesanan->total_bayar > 0) ? $pesanan->total_bayar : ($subtotal + $pajak + $biayaCard);
-    $bayar      = $pesanan->bayar ?? $totalBayar;
-    $kembalian  = $pesanan->kembalian ?? 0;
+    $subtotal = $pesanan->total_harga ?? 0;
+    $metode   = $pesanan->metode_pembayaran ?? 'cash';
+
+    $pajak = ($pesanan->pajak > 0)
+        ? $pesanan->pajak
+        : round($subtotal * 0.07);
+
+    $biayaCard = ($pesanan->biaya_card > 0)
+        ? $pesanan->biaya_card
+        : (in_array($metode, ['card', 'qris']) ? round(($subtotal + $pajak) * 0.02) : 0);
+
+    $totalBayar = ($pesanan->total_bayar > 0)
+        ? $pesanan->total_bayar
+        : ($subtotal + $pajak + $biayaCard);
+
+    $bayarCash       = (int) ($pesanan->bayar_cash ?? 0);
+    $bayarElektronik = (int) ($pesanan->bayar_elektronik ?? 0);
+
+    $bayar     = $pesanan->bayar ?? $totalBayar;
+    $kembalian = $pesanan->kembalian ?? 0;
+
+    $isElektronik = in_array($metode, ['qris', 'card']);
+    $isSplit = $isElektronik && $bayarCash > 0 && $bayarElektronik > 0;
+
+    $labelElektronik = match ($metode) {
+        'qris' => 'QRIS',
+        'card' => 'CARD',
+        'cash' => 'CASH',
+        default => strtoupper($metode),
+    };
+
+    $labelMetode = $isSplit
+        ? 'SPLIT CASH + ' . $labelElektronik
+        : $labelElektronik;
+
+    $labelFee = match ($metode) {
+        'qris' => 'QRIS Fee',
+        'card' => 'Card Fee',
+        default => 'Fee',
+    };
 @endphp
 
 <div class="struk">
@@ -122,6 +155,7 @@
         <div>KUTA SELATAN</div>
         <div>BADUNG</div>
     </div>
+
     <pre>
 ====================================
 Date     : {{ \Carbon\Carbon::parse($pesanan->created_at)->timezone('Asia/Makassar')->format('d/m/Y H:i') }}
@@ -130,7 +164,7 @@ Cashier: {{ $pesanan->user->nama ?? '-' }}
 ------------------------------------
 @foreach($pesanan->detailPesanan as $d)
 @php
-    $harga        = $d->harga_pakai ?? $d->menu->harga ?? 0;
+    $harga = $d->harga_pakai ?? $d->menu->harga ?? 0;
     $subtotalItem = $d->subtotal ?? ($harga * $d->jumlah);
 @endphp
 {{ mb_strimwidth($d->menu->nama_menu ?? '-', 0, 36, '..') }}
@@ -144,14 +178,19 @@ Cashier: {{ $pesanan->user->nama ?? '-' }}
 Subtotal      : Rp{{ number_format($subtotal, 0, ',', '.') }}
 Service Charge: Rp{{ number_format($pajak, 0, ',', '.') }}
 @if($biayaCard > 0)
-Card Fee      : Rp{{ number_format($biayaCard, 0, ',', '.') }}
+{{ str_pad($labelFee, 14, ' ', STR_PAD_RIGHT) }}: Rp{{ number_format($biayaCard, 0, ',', '.') }}
 @endif
 ====================================
 TOTAL  : Rp{{ number_format($totalBayar, 0, ',', '.') }}
+@if($isSplit)
+Cash   : Rp{{ number_format($bayarCash, 0, ',', '.') }}
+{{ str_pad($labelElektronik, 7, ' ', STR_PAD_RIGHT) }}: Rp{{ number_format($bayarElektronik, 0, ',', '.') }}
+@else
 Paid   : Rp{{ number_format($bayar, 0, ',', '.') }}
+@endif
 Change : Rp{{ number_format($kembalian, 0, ',', '.') }}
 ====================================
-  Metode/Method: {{ strtoupper($metode) }}
+  Metode/Method: {{ $labelMetode }}
 ====================================
         Thank You!
       See you again :)
@@ -163,9 +202,11 @@ Change : Rp{{ number_format($kembalian, 0, ',', '.') }}
     <button type="button" class="btn btn-back" onclick="history.back()">
         Kembali
     </button>
+
     <button type="button" class="btn btn-data" onclick="window.location.href='{{ route('pesanan.index') }}'">
         Data Pesanan
     </button>
+
     <button type="button" class="btn btn-print" onclick="window.print()">
         Cetak
     </button>

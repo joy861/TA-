@@ -147,6 +147,17 @@
         padding: 12px 14px;
     }
 
+    .payment-split-info {
+        background: #eef2ff;
+        border: 1.5px dashed rgba(30,58,95,0.18);
+        border-radius: 12px;
+        padding: 10px 12px;
+        font-size: 12px;
+        font-weight: 700;
+        color: #1e3a5f;
+        margin-top: 8px;
+    }
+
     .payment-modal-overlay {
         position: fixed;
         inset: 0;
@@ -346,7 +357,7 @@
     <div>
         <p class="kasir-page-eyebrow">PEMBAYARAN</p>
         <h1 class="kasir-page-title">Pembayaran</h1>
-        <div class="kasir-page-subtitle">Proses pembayaran pesanan dengan cash atau QRIS</div>
+        <div class="kasir-page-subtitle">Proses pembayaran pesanan dengan cash, QRIS, atau Card (bisa digabung dengan cash)</div>
     </div>
 
     <a href="{{ $backUrl }}" class="kasir-btn kasir-btn-ghost">
@@ -443,7 +454,7 @@
                         <span id="displayPajak">Rp{{ number_format(round($subtotal * 0.07), 0, ',', '.') }}</span>
                     </div>
                     <div class="payment-breakdown-row" id="rowBiayaCard" style="display:none;">
-                        <span>Biaya Card (2%)</span>
+                        <span id="labelBiayaCard">Biaya Card (2%)</span>
                         <span id="displayBiayaCard">Rp0</span>
                     </div>
                     <div class="payment-breakdown-row total-row">
@@ -458,6 +469,7 @@
 
                 <input type="hidden" id="subtotalRaw" value="{{ $subtotal }}">
                 <input type="hidden" name="bayar" id="bayarHidden" value="{{ round($subtotal + $subtotal * 0.07) }}">
+                <input type="hidden" name="bayar_cash" id="bayarCashHidden" value="0">
 
                 <div class="mb-4">
                     <label class="kasir-form-label">Metode Pembayaran</label>
@@ -503,6 +515,21 @@
                            value="{{ round($subtotal + $subtotal * 0.07) }}"
                            onkeyup="hitungKembalian()"
                            onchange="hitungKembalian()">
+                </div>
+
+                <div class="mb-4" id="bayarCashSplitWrapper" style="display:none;">
+                    <label class="kasir-form-label">Nominal Cash (opsional, untuk gabung pembayaran)</label>
+                    <input type="number"
+                           id="bayarCashSplit"
+                           class="kasir-input"
+                           min="0"
+                           value="0"
+                           placeholder="0"
+                           onkeyup="hitungSplit()"
+                           onchange="hitungSplit()">
+                    <div class="payment-split-info" id="infoSplitElektronik">
+                        Seluruh pembayaran via metode elektronik.
+                    </div>
                 </div>
 
                 <div class="mb-5" id="kembalianWrapper">
@@ -582,7 +609,7 @@
         const subtotal   = parseInt(document.getElementById('subtotalRaw').value) || 0;
         const metode     = document.getElementById('metode_pembayaran').value;
         const pajak      = Math.round(subtotal * 0.07);
-        const biayaCard  = metode === 'card' ? Math.round((subtotal + pajak) * 0.02) : 0;
+        const biayaCard  = (metode === 'card' || metode === 'qris') ? Math.round((subtotal + pajak) * 0.02) : 0;
         const total      = subtotal + pajak + biayaCard;
 
         return { subtotal, pajak, biayaCard, total };
@@ -597,8 +624,17 @@
         document.getElementById('displayTotal').textContent      = total.toLocaleString('id-ID');
         document.getElementById('displayTotalAkhir').textContent = formatRupiah(total);
 
-        const rowBiayaCard = document.getElementById('rowBiayaCard');
-        rowBiayaCard.style.display = metode === 'card' ? '' : 'none';
+        const rowBiayaCard   = document.getElementById('rowBiayaCard');
+        const labelBiayaCard = document.getElementById('labelBiayaCard');
+        const adaBiaya       = metode === 'card' || metode === 'qris';
+
+        rowBiayaCard.style.display = adaBiaya ? '' : 'none';
+
+        if (metode === 'qris') {
+            labelBiayaCard.textContent = 'Biaya QRIS (2%)';
+        } else if (metode === 'card') {
+            labelBiayaCard.textContent = 'Biaya Card (2%)';
+        }
     }
 
     function hitungKembalian() {
@@ -610,11 +646,40 @@
         document.getElementById('bayarHidden').value = bayar;
     }
 
+    function hitungSplit() {
+        const { total } = hitungTotal();
+        const metode    = document.getElementById('metode_pembayaran').value;
+        const inputCash = document.getElementById('bayarCashSplit');
+
+        let cash = parseInt(inputCash.value) || 0;
+
+        if (cash > total) {
+            cash = total;
+            inputCash.value = total;
+        }
+        if (cash < 0) {
+            cash = 0;
+            inputCash.value = 0;
+        }
+
+        const elektronik = total - cash;
+
+        document.getElementById('bayarCashHidden').value = cash;
+
+        const info = document.getElementById('infoSplitElektronik');
+        if (cash > 0) {
+            info.textContent = `Cash: ${formatRupiah(cash)}  +  ${metode.toUpperCase()}: ${formatRupiah(elektronik)}`;
+        } else {
+            info.textContent = 'Seluruh pembayaran via metode elektronik.';
+        }
+    }
+
     function ubahMetodePembayaran() {
         const metode = document.getElementById('metode_pembayaran').value;
-        const bayarInput     = document.getElementById('bayar');
-        const bayarWrapper   = document.getElementById('bayarWrapper');
+        const bayarInput       = document.getElementById('bayar');
+        const bayarWrapper     = document.getElementById('bayarWrapper');
         const kembalianWrapper = document.getElementById('kembalianWrapper');
+        const splitWrapper     = document.getElementById('bayarCashSplitWrapper');
 
         const info     = document.getElementById('paymentMethodInfo');
         const iconWrap = document.getElementById('paymentMethodIconWrap');
@@ -630,34 +695,42 @@
 
         if (metode === 'qris') {
             bayarInput.readOnly = true;
-            bayarWrapper.style.display   = '';
-            kembalianWrapper.style.display = '';
+            bayarWrapper.style.display     = 'none';
+            kembalianWrapper.style.display = 'none';
+            splitWrapper.style.display     = '';
             info.className = 'payment-method-card active-qris mb-4';
             iconWrap.style.background = '#60a5fa';
             icon.className  = 'bi bi-qr-code';
             icon.style.color = '#1e3a5f';
             title.textContent = 'Pembayaran QRIS';
-            desc.textContent  = 'Nominal mengikuti total pesanan.';
+            desc.textContent  = 'Nominal mengikuti total pesanan. Biaya 2% ditambahkan. Bisa digabung dengan cash.';
+            document.getElementById('bayarCashSplit').value = 0;
+            hitungSplit();
         } else if (metode === 'card') {
             bayarInput.readOnly = true;
-            bayarWrapper.style.display   = 'none';
+            bayarWrapper.style.display     = 'none';
             kembalianWrapper.style.display = 'none';
+            splitWrapper.style.display     = '';
             info.className = 'payment-method-card active-card mb-4';
             iconWrap.style.background = 'rgba(99,102,241,0.15)';
             icon.className  = 'bi bi-credit-card-2-front';
             icon.style.color = '#6366f1';
             title.textContent = 'Pembayaran Debit / Credit Card';
-            desc.textContent  = 'Nominal diproses langsung melalui mesin EDC. Biaya 2% ditambahkan.';
+            desc.textContent  = 'Nominal diproses melalui mesin EDC. Biaya 2% ditambahkan. Bisa digabung dengan cash.';
+            document.getElementById('bayarCashSplit').value = 0;
+            hitungSplit();
         } else {
             bayarInput.readOnly = false;
-            bayarWrapper.style.display   = '';
+            bayarWrapper.style.display     = '';
             kembalianWrapper.style.display = '';
+            splitWrapper.style.display     = 'none';
             info.className = 'payment-method-card active-cash mb-4';
             iconWrap.style.background = 'rgba(34,197,94,0.15)';
             icon.className  = 'bi bi-cash-coin';
             icon.style.color = '#16a34a';
             title.textContent = 'Pembayaran Cash';
             desc.textContent  = 'Jumlah bayar bisa diubah jika uang lebih.';
+            document.getElementById('bayarCashHidden').value = 0;
         }
 
         hitungKembalian();
@@ -671,17 +744,31 @@
             return;
         }
 
-        const metode       = document.getElementById('metode_pembayaran').value;
-        const { total }    = hitungTotal();
-        const bayar        = parseInt(document.getElementById('bayar').value) || 0;
+        const metode    = document.getElementById('metode_pembayaran').value;
+        const { total } = hitungTotal();
+        const bayar     = parseInt(document.getElementById('bayar').value) || 0;
 
         if (metode === 'cash' && bayar < total) {
             alert('Jumlah bayar kurang dari total pembayaran.');
             return;
         }
 
-        const modal = document.getElementById('paymentConfirmModal');
-        const box   = document.getElementById('paymentConfirmBox');
+        const modal   = document.getElementById('paymentConfirmModal');
+        const box     = document.getElementById('paymentConfirmBox');
+        const subtext = document.querySelector('.payment-modal-subtext');
+
+        if (metode !== 'cash') {
+            const cash       = parseInt(document.getElementById('bayarCashSplit').value) || 0;
+            const elektronik = total - cash;
+
+            if (cash > 0) {
+                subtext.textContent = `Cash: ${formatRupiah(cash)} + ${metode.toUpperCase()}: ${formatRupiah(elektronik)}. Status pesanan akan berubah menjadi sudah bayar dan meja akan dikosongkan.`;
+            } else {
+                subtext.textContent = 'Setelah diproses, status pesanan akan berubah menjadi sudah bayar dan meja akan dikosongkan.';
+            }
+        } else {
+            subtext.textContent = 'Setelah diproses, status pesanan akan berubah menjadi sudah bayar dan meja akan dikosongkan.';
+        }
 
         box.classList.remove('success-mode');
         modal.classList.add('show');

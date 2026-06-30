@@ -12,6 +12,7 @@ class Pesanan extends Model
     protected $fillable = [
         'tanggal',
         'id_meja',
+         'jumlah_orang', // tambahkan
         'id_user',
         'total_harga',
         'status',
@@ -20,6 +21,8 @@ class Pesanan extends Model
         'biaya_card',
         'total_bayar',
         'bayar',
+            'bayar_cash',       // tambahkan
+    'bayar_elektronik', // tambahkan
         'kembalian',
     ];
 

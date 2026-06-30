@@ -20,57 +20,79 @@ class TransaksiController extends Controller
     }
 
     // Proses pembayaran
-    public function proses(Request $request, $id)
-    {
-        $request->validate([
-            'metode_pembayaran' => 'required|in:cash,qris,card',
-            'bayar'             => 'required|numeric|min:0',
-        ]);
+public function proses(Request $request, $id)
+{
+    $request->validate([
+        'metode_pembayaran' => 'required|in:cash,qris,card',
+        'bayar'             => 'required|numeric|min:0',
+        'bayar_cash'        => 'nullable|numeric|min:0',
+    ]);
 
-        DB::beginTransaction();
+    DB::beginTransaction();
 
-        try {
-            $pesanan = Pesanan::findOrFail($id);
+    try {
+        $pesanan = Pesanan::findOrFail($id);
 
-            $subtotal   = $pesanan->total_harga;
-            $pajak      = round($subtotal * 0.07);
-            $biayaCard  = $request->metode_pembayaran === 'card'
-                            ? round(($subtotal + $pajak) * 0.02)
-                            : 0;
-            $totalBayar = $subtotal + $pajak + $biayaCard;
+        $subtotal   = $pesanan->total_harga;
+        $pajak      = round($subtotal * 0.07);
+        $biayaCard  = in_array($request->metode_pembayaran, ['card', 'qris'])
+                        ? round(($subtotal + $pajak) * 0.02)
+                        : 0;
+        $totalBayar = $subtotal + $pajak + $biayaCard;
 
-            if ($request->metode_pembayaran !== 'card' && $request->bayar < $totalBayar) {
+        $metodeElektronik = in_array($request->metode_pembayaran, ['card', 'qris']);
+
+        $bayarCash       = null;
+        $bayarElektronik = null;
+
+        if ($metodeElektronik) {
+            // ── Split payment: cash + qris/card ──
+            $bayarCash = (int) ($request->bayar_cash ?? 0);
+
+            if ($bayarCash > $totalBayar) {
+                DB::rollBack();
+                return back()->with('error', 'Nominal cash tidak boleh melebihi total pembayaran.');
+            }
+
+            $bayarElektronik = $totalBayar - $bayarCash;
+            $bayar           = $totalBayar;
+            $kembalian       = 0;
+        } else {
+            // ── Cash murni ──
+            if ($request->bayar < $totalBayar) {
                 DB::rollBack();
                 return back()->with('error', 'Jumlah bayar kurang dari total pembayaran.');
             }
 
-            $bayar     = $request->metode_pembayaran === 'card' ? $totalBayar : $request->bayar;
+            $bayar     = $request->bayar;
             $kembalian = $bayar - $totalBayar;
-
-            $pesanan->update([
-                'status'            => 'sudah_bayar',
-                'metode_pembayaran' => $request->metode_pembayaran,
-                'bayar'             => $bayar,
-                'kembalian'         => $kembalian,
-                'pajak'             => $pajak,
-                'biaya_card'        => $biayaCard,
-                'total_bayar'       => $totalBayar,
-            ]);
-
-            Meja::where('id_meja', $pesanan->id_meja)
-                ->update(['status' => 'kosong']);
-
-            DB::commit();
-
-            // Cetak dilakukan manual dari halaman struk via window.print()
-            return redirect()->route('struk.cetak', $pesanan->id_pesanan)
-                ->with('success', 'Pembayaran berhasil.');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', 'Gagal pembayaran: ' . $e->getMessage());
         }
+
+        $pesanan->update([
+            'status'            => 'sudah_bayar',
+            'metode_pembayaran' => $request->metode_pembayaran,
+            'bayar'             => $bayar,
+            'bayar_cash'        => $bayarCash,
+            'bayar_elektronik'  => $bayarElektronik,
+            'kembalian'         => $kembalian,
+            'pajak'             => $pajak,
+            'biaya_card'        => $biayaCard,
+            'total_bayar'       => $totalBayar,
+        ]);
+
+        Meja::where('id_meja', $pesanan->id_meja)
+            ->update(['status' => 'kosong']);
+
+        DB::commit();
+
+        return redirect()->route('struk.cetak', $pesanan->id_pesanan)
+            ->with('success', 'Pembayaran berhasil.');
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return back()->with('error', 'Gagal pembayaran: ' . $e->getMessage());
     }
+}
 
     // Halaman struk (show)
     public function struk($id)

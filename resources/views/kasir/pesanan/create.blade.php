@@ -68,7 +68,6 @@
         box-shadow: 0 8px 22px rgba(30,58,95,0.03);
     }
 
-
     .kategori-chip {
         height: 32px;
         padding: 0 13px;
@@ -126,8 +125,9 @@
         border-radius: 999px;
     }
 
-
-    .search-wrapper { position: relative; }
+    .search-wrapper {
+        position: relative;
+    }
 
     .search-input {
         width: 100%;
@@ -153,7 +153,10 @@
         box-shadow: 0 0 0 3px rgba(96,165,250,0.15);
     }
 
-    .search-input::placeholder { color: rgba(30,58,95,0.3); font-weight: 500; }
+    .search-input::placeholder {
+        color: rgba(30,58,95,0.3);
+        font-weight: 500;
+    }
 
     .search-icon {
         position: absolute;
@@ -238,8 +241,13 @@
         color: #1e3a5f;
     }
 
-    .menu-panel { display: none; }
-    .menu-panel.active { display: block; }
+    .menu-panel {
+        display: none;
+    }
+
+    .menu-panel.active {
+        display: block;
+    }
 
     .panel-header {
         display: flex;
@@ -266,8 +274,15 @@
         white-space: nowrap;
     }
 
-    .panel-header-normal { background: #1e3a5f; color: #fff; }
-    .panel-header-guide  { background: #60a5fa; color: #1e3a5f; }
+    .panel-header-normal {
+        background: #1e3a5f;
+        color: #fff;
+    }
+
+    .panel-header-guide {
+        background: #60a5fa;
+        color: #1e3a5f;
+    }
 
     .menu-grid {
         display: grid;
@@ -304,10 +319,21 @@
         box-shadow: 0 10px 26px rgba(30,58,95,0.06);
     }
 
-    .menu-card.selected { border-color: #1e3a5f; background: #eef2ff; }
-    .menu-card-guide.selected { border-color: #60a5fa; background: #e0f0ff; }
+    .menu-card.selected {
+        border-color: #1e3a5f;
+        background: #eef2ff;
+    }
+
+    .menu-card-guide.selected {
+        border-color: #60a5fa;
+        background: #e0f0ff;
+    }
+
     .menu-card.habis,
-    .menu-card-guide.habis { opacity: 0.4; pointer-events: none; }
+    .menu-card-guide.habis {
+        opacity: 0.4;
+        pointer-events: none;
+    }
 
     .check-badge,
     .check-badge-guide {
@@ -324,10 +350,20 @@
         font-weight: 900;
     }
 
-    .check-badge { background: #1e3a5f; color: #60a5fa; }
-    .check-badge-guide { background: #60a5fa; color: #1e3a5f; }
-    .menu-card.selected .check-badge { display: flex; }
-    .menu-card-guide.selected .check-badge-guide { display: flex; }
+    .check-badge {
+        background: #1e3a5f;
+        color: #60a5fa;
+    }
+
+    .check-badge-guide {
+        background: #60a5fa;
+        color: #1e3a5f;
+    }
+
+    .menu-card.selected .check-badge,
+    .menu-card-guide.selected .check-badge-guide {
+        display: flex;
+    }
 
     .menu-nama {
         font-size: 13px;
@@ -344,8 +380,13 @@
         margin-top: 4px;
     }
 
-    .menu-harga { color: rgba(30,58,95,0.58); }
-    .menu-harga-guide { color: #1e5fa5; }
+    .menu-harga {
+        color: rgba(30,58,95,0.58);
+    }
+
+    .menu-harga-guide {
+        color: #1e5fa5;
+    }
 
     .qty-control {
         display: none;
@@ -355,7 +396,9 @@
     }
 
     .menu-card.selected .qty-control,
-    .menu-card-guide.selected .qty-control { display: flex; }
+    .menu-card-guide.selected .qty-control {
+        display: flex;
+    }
 
     .qty-btn,
     .qty-btn-guide {
@@ -372,10 +415,25 @@
         transition: all 0.2s ease;
     }
 
-    .qty-btn { background: #1e3a5f; color: #60a5fa; }
-    .qty-btn:hover { background: #60a5fa; color: #1e3a5f; }
-    .qty-btn-guide { background: #60a5fa; color: #1e3a5f; }
-    .qty-btn-guide:hover { background: #1e3a5f; color: #60a5fa; }
+    .qty-btn {
+        background: #1e3a5f;
+        color: #60a5fa;
+    }
+
+    .qty-btn:hover {
+        background: #60a5fa;
+        color: #1e3a5f;
+    }
+
+    .qty-btn-guide {
+        background: #60a5fa;
+        color: #1e3a5f;
+    }
+
+    .qty-btn-guide:hover {
+        background: #1e3a5f;
+        color: #60a5fa;
+    }
 
     .qty-num {
         min-width: 22px;
@@ -385,7 +443,6 @@
         color: #1e3a5f;
     }
 
-    /* === CATATAN INPUT (BARU) === */
     .catatan-input {
         display: none;
         width: 100%;
@@ -401,7 +458,10 @@
         background: #fff;
     }
 
-    .catatan-input::placeholder { color: rgba(30,58,95,0.32); font-weight: 500; }
+    .catatan-input::placeholder {
+        color: rgba(30,58,95,0.32);
+        font-weight: 500;
+    }
 
     .catatan-input:focus {
         border-color: #60a5fa;
@@ -412,15 +472,19 @@
     .menu-card-guide.selected .catatan-input {
         display: block;
     }
-    /* === END CATATAN INPUT === */
 
     .order-bar {
         border-radius: 14px;
         padding: 12px;
     }
 
-    .order-bar-normal { background: #eef2ff; }
-    .order-bar-guide  { background: #e0f0ff; }
+    .order-bar-normal {
+        background: #eef2ff;
+    }
+
+    .order-bar-guide {
+        background: #e0f0ff;
+    }
 
     .order-item {
         display: flex;
@@ -432,7 +496,9 @@
         border-bottom: 1px solid rgba(30,58,95,0.06);
     }
 
-    .order-item:last-child { border-bottom: none; }
+    .order-item:last-child {
+        border-bottom: none;
+    }
 
     .order-item-catatan {
         display: block;
@@ -481,9 +547,18 @@
         padding-right: 4px;
     }
 
-    .menu-scroll::-webkit-scrollbar { width: 5px; }
-    .menu-scroll::-webkit-scrollbar-track { background: transparent; }
-    .menu-scroll::-webkit-scrollbar-thumb { background: rgba(30,58,95,0.16); border-radius: 999px; }
+    .menu-scroll::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    .menu-scroll::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .menu-scroll::-webkit-scrollbar-thumb {
+        background: rgba(30,58,95,0.16);
+        border-radius: 999px;
+    }
 
     .summary-list-scroll {
         max-height: 42vh;
@@ -491,16 +566,24 @@
         padding-right: 2px;
     }
 
-    .summary-list-scroll::-webkit-scrollbar { width: 4px; }
-    .summary-list-scroll::-webkit-scrollbar-track { background: transparent; }
-    .summary-list-scroll::-webkit-scrollbar-thumb { background: rgba(30,58,95,0.16); border-radius: 999px; }
+    .summary-list-scroll::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .summary-list-scroll::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .summary-list-scroll::-webkit-scrollbar-thumb {
+        background: rgba(30,58,95,0.16);
+        border-radius: 999px;
+    }
 
     @media (max-width: 1100px) {
         .input-order-layout {
             grid-template-columns: minmax(0, 1fr) 300px;
             gap: 14px;
         }
-
     }
 
     @media (max-width: 767px) {
@@ -511,7 +594,6 @@
         .summary-sticky {
             position: static;
         }
-
 
         .menu-scroll {
             height: 420px;
@@ -532,6 +614,7 @@
         <h1 class="kasir-page-title">Input Pesanan</h1>
         <div class="kasir-page-subtitle">Pilih meja, lalu tambahkan menu dari tab Customer atau Guide</div>
     </div>
+
     <a href="{{ $backUrl }}" class="kasir-btn kasir-btn-outline">
         <i class="bi bi-receipt"></i>
         <span>Data Pesanan</span>
@@ -548,19 +631,39 @@
                     <h2 class="kasir-section-title">Pilih Meja</h2>
                     <div class="kasir-section-subtitle">Tentukan meja pelanggan yang sedang memesan</div>
                 </div>
+
                 <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background:#eef2ff;">
                     <i class="bi bi-grid-3x3-gap" style="color:#1e3a5f;"></i>
                 </div>
             </div>
+
             <div class="meja-select-wrapper">
-                <select name="id_meja" class="kasir-select" required>
+                <select name="id_meja" id="select-meja" class="kasir-select" required onchange="handleMejaChange(this)">
                     <option value="">-- Pilih Meja --</option>
                     @foreach($meja as $m)
-                        <option value="{{ $m->id_meja }}">
-                            Meja {{ $m->nomor_meja }} — {{ $m->kapasitas }} orang
+                        <option value="{{ $m->id_meja }}"
+                                data-kapasitas="{{ $m->kapasitas }}"
+                                data-terisi="{{ $m->terisi }}"
+                                data-sisa="{{ $m->sisa }}">
+                            Meja {{ $m->nomor_meja }} — sisa {{ $m->sisa }} dari {{ $m->kapasitas }} kursi
                         </option>
                     @endforeach
                 </select>
+            </div>
+
+            <div id="jumlah-orang-wrap" class="mt-4" style="display:none;">
+                <label class="kasir-form-label">Jumlah Orang</label>
+                <input type="number"
+                       name="jumlah_orang"
+                       id="input-jumlah-orang"
+                       class="kasir-select"
+                       min="1"
+                       step="1"
+                       placeholder="Masukkan jumlah orang"
+                       oninput="validasiJumlahOrang(this)">
+
+                <div id="sisa-kursi-info" class="text-xs mt-2" style="color:rgba(30,58,95,0.5); font-weight:600;"></div>
+                <div id="jumlah-orang-error" class="text-xs mt-1" style="color:#dc2626; font-weight:700; display:none;"></div>
             </div>
         </div>
 
@@ -571,6 +674,7 @@
                         <i class="bi bi-person"></i>
                         Customer
                     </button>
+
                     <button type="button" class="menu-tab-btn guide-tab" data-menu-tab="guide" onclick="switchMenuTab('guide')">
                         <i class="bi bi-star-fill"></i>
                         Guide
@@ -583,6 +687,7 @@
                             <i class="bi bi-person"></i>
                             <span>Menu Customer</span>
                         </div>
+
                         <div class="panel-header-note">Harga Normal</div>
                     </div>
 
@@ -612,15 +717,18 @@
                                          data-nama="{{ $mn->nama_menu }}"
                                          onclick="toggleMenu('normal', this)">
                                         <div class="check-badge"><i class="bi bi-check-lg"></i></div>
+
                                         <div>
                                             <div class="menu-nama">{{ $mn->nama_menu }}</div>
                                             <div class="menu-harga">Rp{{ number_format($mn->harga, 0, ',', '.') }}</div>
                                         </div>
+
                                         <div class="qty-control">
                                             <button type="button" class="qty-btn" onclick="ubahQty(event, this, -1, 'normal')">−</button>
                                             <span class="qty-num">1</span>
                                             <button type="button" class="qty-btn" onclick="ubahQty(event, this, 1, 'normal')">+</button>
                                         </div>
+
                                         <input type="text"
                                                class="catatan-input"
                                                placeholder="Catatan (opsional)"
@@ -630,6 +738,7 @@
                                 @endif
                             @endforeach
                         </div>
+
                         <div class="no-result" id="no-result-normal">
                             <i class="bi bi-search" style="font-size:20px; display:block; margin-bottom:6px;"></i>
                             Menu tidak ditemukan
@@ -643,6 +752,7 @@
                             <i class="bi bi-star-fill"></i>
                             <span>Menu Guide</span>
                         </div>
+
                         <div class="panel-header-note">Harga Guide</div>
                     </div>
 
@@ -672,15 +782,18 @@
                                          data-nama="{{ $mn->nama_menu }}"
                                          onclick="toggleMenu('guide', this)">
                                         <div class="check-badge-guide"><i class="bi bi-check-lg"></i></div>
+
                                         <div>
                                             <div class="menu-nama">{{ $mn->nama_menu }}</div>
                                             <div class="menu-harga-guide">Rp{{ number_format($mn->harga_guide ?? $mn->harga, 0, ',', '.') }}</div>
                                         </div>
+
                                         <div class="qty-control">
                                             <button type="button" class="qty-btn-guide" onclick="ubahQty(event, this, -1, 'guide')">−</button>
                                             <span class="qty-num">1</span>
                                             <button type="button" class="qty-btn-guide" onclick="ubahQty(event, this, 1, 'guide')">+</button>
                                         </div>
+
                                         <input type="text"
                                                class="catatan-input"
                                                placeholder="Catatan (opsional)"
@@ -690,6 +803,7 @@
                                 @endif
                             @endforeach
                         </div>
+
                         <div class="no-result" id="no-result-guide">
                             <i class="bi bi-search" style="font-size:20px; display:block; margin-bottom:6px;"></i>
                             Menu tidak ditemukan
@@ -705,6 +819,7 @@
                             <h2 class="kasir-section-title">Ringkasan</h2>
                             <div class="kasir-section-subtitle">Total pesanan</div>
                         </div>
+
                         <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background:rgba(34,197,94,0.1);">
                             <i class="bi bi-basket" style="color:#16a34a;"></i>
                         </div>
@@ -763,6 +878,8 @@
     <div id="hidden-inputs"></div>
 </form>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
     const pesananNormal = {};
     const pesananGuide  = {};
@@ -779,13 +896,14 @@
         });
 
         const target = document.getElementById(grid === 'normal' ? 'panel-normal' : 'panel-guide');
+
         if (target) {
             target.classList.add('active');
         }
     }
 
     function toggleMenu(grid, card) {
-        const id      = card.dataset.id;
+        const id = card.dataset.id;
         const pesanan = grid === 'normal' ? pesananNormal : pesananGuide;
 
         if (pesanan[id]) {
@@ -797,17 +915,20 @@
             pesanan[id] = { qty: 1, catatan: '' };
             card.classList.add('selected');
         }
+
         updateHidden();
         updateOrderBar();
     }
 
     function ubahQty(event, btn, delta, grid) {
         event.stopPropagation();
-        const card    = btn.closest(grid === 'normal' ? '.menu-card' : '.menu-card-guide');
-        const id      = card.dataset.id;
+
+        const card = btn.closest(grid === 'normal' ? '.menu-card' : '.menu-card-guide');
+        const id = card.dataset.id;
         const pesanan = grid === 'normal' ? pesananNormal : pesananGuide;
-        const qtyEl   = card.querySelector('.qty-num');
+        const qtyEl = card.querySelector('.qty-num');
         const current = pesanan[id]?.qty ?? 1;
+
         let qty = current + delta;
 
         if (qty < 1) {
@@ -820,18 +941,20 @@
             pesanan[id] = { qty: qty, catatan: catatanLama };
             qtyEl.textContent = qty;
         }
+
         updateHidden();
         updateOrderBar();
     }
 
     function ubahCatatan(event, input, grid) {
-        const card    = input.closest(grid === 'normal' ? '.menu-card' : '.menu-card-guide');
-        const id      = card.dataset.id;
+        const card = input.closest(grid === 'normal' ? '.menu-card' : '.menu-card-guide');
+        const id = card.dataset.id;
         const pesanan = grid === 'normal' ? pesananNormal : pesananGuide;
 
         if (pesanan[id]) {
             pesanan[id].catatan = input.value;
             updateHidden();
+            updateOrderBar();
         }
     }
 
@@ -850,6 +973,7 @@
         Object.entries(pesananNormal).forEach(([id, data]) => {
             const card = document.querySelector(`#grid-normal .menu-card[data-id="${id}"]`);
             if (!card) return;
+
             wrap.innerHTML += `<input type="hidden" name="menu[]" value="${id}">`;
             wrap.innerHTML += `<input type="hidden" name="jumlah[]" value="${data.qty}">`;
             wrap.innerHTML += `<input type="hidden" name="harga_pakai[]" value="${card.dataset.harga}">`;
@@ -860,6 +984,7 @@
         Object.entries(pesananGuide).forEach(([id, data]) => {
             const card = document.querySelector(`#grid-guide .menu-card-guide[data-id="${id}"]`);
             if (!card) return;
+
             wrap.innerHTML += `<input type="hidden" name="menu[]" value="${id}">`;
             wrap.innerHTML += `<input type="hidden" name="jumlah[]" value="${data.qty}">`;
             wrap.innerHTML += `<input type="hidden" name="harga_pakai[]" value="${card.dataset.harga}">`;
@@ -881,39 +1006,48 @@
         let totalGuide  = 0;
 
         const listNormal = document.getElementById('list-normal');
+
         listNormal.innerHTML = Object.entries(pesananNormal).map(([id, data]) => {
-            const card  = document.querySelector(`#grid-normal .menu-card[data-id="${id}"]`);
+            const card = document.querySelector(`#grid-normal .menu-card[data-id="${id}"]`);
             if (!card) return '';
+
             const harga = parseInt(card.dataset.harga);
-            const sub   = harga * data.qty;
+            const sub = harga * data.qty;
             totalNormal += sub;
+
             const catatanHtml = data.catatan
                 ? `<span class="order-item-catatan">📝 ${escapeHtml(data.catatan)}</span>`
                 : '';
+
             return `<div class="order-item">
                 <span style="font-weight:700;">${escapeHtml(card.dataset.nama)} <strong>x${data.qty}</strong>${catatanHtml}</span>
                 <span style="font-weight:900; white-space:nowrap;">Rp${sub.toLocaleString('id-ID')}</span>
             </div>`;
         }).join('');
+
         document.getElementById('subtotal-normal').textContent = 'Rp' + totalNormal.toLocaleString('id-ID');
 
         const listGuide = document.getElementById('list-guide');
+
         listGuide.innerHTML = Object.entries(pesananGuide).map(([id, data]) => {
-            const card  = document.querySelector(`#grid-guide .menu-card-guide[data-id="${id}"]`);
+            const card = document.querySelector(`#grid-guide .menu-card-guide[data-id="${id}"]`);
             if (!card) return '';
+
             const harga = parseInt(card.dataset.harga);
-            const sub   = harga * data.qty;
+            const sub = harga * data.qty;
             totalGuide += sub;
+
             const catatanHtml = data.catatan
                 ? `<span class="order-item-catatan">📝 ${escapeHtml(data.catatan)}</span>`
                 : '';
+
             return `<div class="order-item">
                 <span style="font-weight:700;">${escapeHtml(card.dataset.nama)} <strong>x${data.qty}</strong>${catatanHtml}</span>
                 <span style="font-weight:900; white-space:nowrap;">Rp${sub.toLocaleString('id-ID')}</span>
             </div>`;
         }).join('');
-        document.getElementById('subtotal-guide').textContent = 'Rp' + totalGuide.toLocaleString('id-ID');
 
+        document.getElementById('subtotal-guide').textContent = 'Rp' + totalGuide.toLocaleString('id-ID');
         document.getElementById('grand-total').textContent = 'Rp' + (totalNormal + totalGuide).toLocaleString('id-ID');
     }
 
@@ -921,6 +1055,7 @@
         activeKategori[grid] = kategori;
 
         const panel = btn.closest('.menu-panel');
+
         if (panel) {
             panel.querySelectorAll('.kategori-chip').forEach(b => {
                 b.classList.remove('active', 'guide-active');
@@ -937,22 +1072,117 @@
     }
 
     function applyFilter(grid) {
-        const selector  = grid === 'normal' ? '#grid-normal .menu-card' : '#grid-guide .menu-card-guide';
-        const noResult  = document.getElementById(`no-result-${grid}`);
-        const kat       = activeKategori[grid];
-        const keyword   = activeSearch[grid];
+        const selector = grid === 'normal' ? '#grid-normal .menu-card' : '#grid-guide .menu-card-guide';
+        const noResult = document.getElementById(`no-result-${grid}`);
+        const kat = activeKategori[grid];
+        const keyword = activeSearch[grid];
+
         let visible = 0;
 
         document.querySelectorAll(selector).forEach(card => {
-            const matchKat    = kat === 'semua' || card.dataset.kategori == kat;
+            const matchKat = kat === 'semua' || card.dataset.kategori == kat;
             const matchSearch = card.dataset.nama.toLowerCase().includes(keyword);
-            const show        = matchKat && matchSearch;
+            const show = matchKat && matchSearch;
+
             card.style.display = show ? '' : 'none';
+
             if (show) visible++;
         });
 
         noResult.style.display = visible === 0 ? 'block' : 'none';
     }
+
+    function handleMejaChange(select) {
+        const wrap = document.getElementById('jumlah-orang-wrap');
+        const input = document.getElementById('input-jumlah-orang');
+        const info = document.getElementById('sisa-kursi-info');
+        const errEl = document.getElementById('jumlah-orang-error');
+        const opt = select.options[select.selectedIndex];
+
+        if (!select.value) {
+            wrap.style.display = 'none';
+            input.value = '';
+            input.removeAttribute('required');
+            return;
+        }
+
+        const sisa = parseInt(opt.dataset.sisa || '0');
+        const kapasitas = parseInt(opt.dataset.kapasitas || '0');
+
+        wrap.style.display = 'block';
+        input.max = sisa;
+        input.value = '';
+        input.setAttribute('required', 'required');
+
+        errEl.style.display = 'none';
+        errEl.textContent = '';
+
+        info.textContent = `Sisa kursi tersedia: ${sisa} dari ${kapasitas} kursi`;
+    }
+
+    function validasiJumlahOrang(input) {
+        const max = parseInt(input.max || '0');
+        const errEl = document.getElementById('jumlah-orang-error');
+        const val = parseInt(input.value || '0');
+
+        if (val > max) {
+            errEl.textContent = `Jumlah orang melebihi sisa kursi (maksimal ${max} orang)`;
+            errEl.style.display = 'block';
+            input.value = max;
+        } else if (input.value !== '' && val < 1) {
+            errEl.textContent = 'Jumlah orang minimal 1';
+            errEl.style.display = 'block';
+            input.value = 1;
+        } else {
+            errEl.style.display = 'none';
+            errEl.textContent = '';
+        }
+    }
+
+    document.getElementById('form-pesanan').addEventListener('submit', function (e) {
+        const select = document.getElementById('select-meja');
+        const input = document.getElementById('input-jumlah-orang');
+
+        if (!select.value) {
+            return;
+        }
+
+        const opt = select.options[select.selectedIndex];
+        const sisa = parseInt(opt.dataset.sisa || '0');
+        const val = parseInt(input.value || '0');
+
+        if (!val || val < 1) {
+            e.preventDefault();
+
+            Swal.fire({
+                title: 'Jumlah Orang Wajib Diisi',
+                text: 'Silakan isi jumlah orang sebelum menyimpan pesanan.',
+                icon: 'warning',
+                confirmButtonText: 'Isi Sekarang',
+                confirmButtonColor: '#1e3a5f'
+            }).then(() => {
+                input.focus();
+            });
+
+            return;
+        }
+
+        if (val > sisa) {
+            e.preventDefault();
+
+            Swal.fire({
+                title: 'Jumlah Orang Melebihi Kapasitas',
+                text: `Jumlah orang melebihi sisa kursi meja ini. Maksimal ${sisa} orang.`,
+                icon: 'error',
+                confirmButtonText: 'Perbaiki',
+                confirmButtonColor: '#dc2626'
+            }).then(() => {
+                input.focus();
+            });
+
+            return;
+        }
+    });
 </script>
 
 @endsection

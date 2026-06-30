@@ -194,33 +194,48 @@
                         <th>Status</th>
                     </tr>
                 </thead>
-                <tbody>
-                    @foreach($pesananTerbaru as $index => $item)
-                        @php
-                            $meja = $item->meja->nomor_meja ?? $item->meja->nama_meja ?? $item->meja ?? '-';
-                            $total = $item->total_bayar ?? $item->total_harga ?? $item->total ?? 0;
-                            $status = strtolower($item->status ?? 'pending');
-                            $waktu = isset($item->created_at) ? \Carbon\Carbon::parse($item->created_at)->format('H:i') : '-';
-                        @endphp
-                        <tr>
-                            <td style="color:rgba(30,58,95,0.4); font-size:12px;">#{{ $index + 1 }}</td>
-                            <td class="font-bold">Meja {{ $meja }}</td>
-                            <td class="font-bold">Rp{{ number_format((float)$total, 0, ',', '.') }}</td>
-                            <td class="text-xs" style="color:rgba(30,58,95,0.5);">{{ $waktu }}</td>
-                            <td>
-                                @if(in_array($status, $statusLunas))
-                                    <span class="kasir-badge kasir-badge-success">
-                                        <span class="dot"></span> Sudah Bayar
-                                    </span>
-                                @else
-                                    <span class="kasir-badge kasir-badge-warning">
-                                        <span class="dot"></span> Belum Bayar
-                                    </span>
-                                @endif
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
+<tbody>
+    @foreach($pesananTerbaru as $index => $item)
+        @php
+            $meja   = $item->meja->nomor_meja ?? $item->meja->nama_meja ?? $item->meja ?? '-';
+            $total  = $item->total_bayar ?? $item->total_harga ?? $item->total ?? 0;
+            $status = strtolower($item->status ?? 'pending');
+            $waktu  = isset($item->created_at) ? \Carbon\Carbon::parse($item->created_at)->format('H:i') : '-';
+
+            $metode = strtolower($item->metode_pembayaran ?? '-');
+            $adaBiayaTambahan = in_array($metode, ['card', 'qris']);
+        @endphp
+        <tr>
+            <td style="color:rgba(30,58,95,0.4); font-size:12px;">#{{ $index + 1 }}</td>
+            <td class="font-bold">Meja {{ $meja }}</td>
+            <td>
+                @if($metode !== '-' && $metode !== '')
+                    <span class="kasir-badge kasir-badge-info" style="text-transform:uppercase;">
+                        {{ $metode }}
+                        @if($adaBiayaTambahan)
+                            <span style="margin-left:4px; opacity:0.7;">+2%</span>
+                        @endif
+                    </span>
+                @else
+                    <span style="color:rgba(30,58,95,0.3); font-size:12px;">-</span>
+                @endif
+            </td>
+            <td class="font-bold">Rp{{ number_format((float)$total, 0, ',', '.') }}</td>
+            <td class="text-xs" style="color:rgba(30,58,95,0.5);">{{ $waktu }}</td>
+            <td>
+                @if(in_array($status, $statusLunas))
+                    <span class="kasir-badge kasir-badge-success">
+                        <span class="dot"></span> Sudah Bayar
+                    </span>
+                @else
+                    <span class="kasir-badge kasir-badge-warning">
+                        <span class="dot"></span> Belum Bayar
+                    </span>
+                @endif
+            </td>
+        </tr>
+    @endforeach
+</tbody>
             </table>
         </div>
     @else

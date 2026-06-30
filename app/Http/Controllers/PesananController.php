@@ -77,37 +77,66 @@ if ($request->filled('search')) {
         return view('kasir.pesanan.index', compact('pesanans'));
     }
 
-    public function create()
-    {
-        $menu     = Menu::where('status', 'tersedia')->with('kategori')->get();
-        $meja     = Meja::where('status', 'kosong')->get();
-        $kategori = Kategori::all();
+public function create()
+{
+    $menu     = Menu::where('status', 'tersedia')->with('kategori')->get();
+    $kategori = Kategori::all();
 
-        return view('kasir.pesanan.create', compact('menu', 'meja', 'kategori'));
-    }
+    $meja = Meja::all()->map(function ($m) {
+        $terisi = Pesanan::where('id_meja', $m->id_meja)
+            ->where('status', 'belum_bayar')
+            ->sum('jumlah_orang');
+
+        $m->terisi = $terisi;
+        $m->sisa   = max($m->kapasitas - $terisi, 0);
+
+        return $m;
+    })->filter(fn ($m) => $m->sisa > 0)->values();
+
+    return view('kasir.pesanan.create', compact('menu', 'meja', 'kategori'));
+}
 
 public function store(Request $request)
 {
     $request->validate([
-        'id_meja' => 'required',
-        'menu'    => 'required|array|min:1',
-        'jumlah'  => 'required|array|min:1',
+        'id_meja'      => 'required',
+        'jumlah_orang' => 'required|integer|min:1',
+        'menu'         => 'required|array|min:1',
+        'jumlah'       => 'required|array|min:1',
     ], [
-        'id_meja.required' => 'Meja wajib dipilih.',
-        'menu.required'    => 'Minimal pilih 1 menu.',
-        'jumlah.required'  => 'Jumlah menu wajib diisi.',
+        'id_meja.required'      => 'Meja wajib dipilih.',
+        'jumlah_orang.required' => 'Jumlah orang wajib diisi.',
+        'jumlah_orang.min'      => 'Jumlah orang minimal 1.',
+        'menu.required'         => 'Minimal pilih 1 menu.',
+        'jumlah.required'       => 'Jumlah menu wajib diisi.',
     ]);
 
     DB::beginTransaction();
 
     try {
+        $meja = Meja::lockForUpdate()->findOrFail($request->id_meja);
+
+        $terisiSaatIni = Pesanan::where('id_meja', $meja->id_meja)
+            ->where('status', 'belum_bayar')
+            ->sum('jumlah_orang');
+
+        $sisa = $meja->kapasitas - $terisiSaatIni;
+
+        if ((int) $request->jumlah_orang > $sisa) {
+            DB::rollBack();
+            return back()
+                ->withInput()
+                ->with('error', "Jumlah orang melebihi sisa kursi meja ini (sisa {$sisa} kursi).");
+        }
+
         $pesanan = Pesanan::create([
-    'tanggal'     => date('Y-m-d'),
-    'id_meja'     => $request->id_meja,
-    'id_user'     => Auth::user()->id_user,
-    'total_harga' => 0,
-    'status'      => 'belum_bayar',
-]);
+            'tanggal'      => date('Y-m-d'),
+            'id_meja'      => $request->id_meja,
+            'jumlah_orang' => $request->jumlah_orang,
+            'id_user'      => Auth::user()->id_user,
+            'total_harga'  => 0,
+            'status'       => 'belum_bayar',
+        ]);
 
         $total = 0;
 
@@ -117,7 +146,7 @@ public function store(Request $request)
             $tipeHarga  = $request->tipe_harga[$key] ?? 'normal';
             $hargaPakai = (int) ($request->harga_pakai[$key] ?? $menu->harga);
             $subtotal   = $hargaPakai * $jumlah;
-            $catatan    = $request->catatan[$key] ?? null; // tambahkan
+            $catatan    = $request->catatan[$key] ?? null;
 
             DetailPesanan::create([
                 'id_pesanan'  => $pesanan->id_pesanan,
@@ -126,7 +155,7 @@ public function store(Request $request)
                 'subtotal'    => $subtotal,
                 'tipe_harga'  => $tipeHarga,
                 'harga_pakai' => $hargaPakai,
-                'catatan'     => $catatan, // tambahkan
+                'catatan'     => $catatan,
                 'is_new'      => 1,
                 'jumlah_awal' => null,
             ]);
@@ -134,12 +163,9 @@ public function store(Request $request)
             $total += $subtotal;
         }
 
-        $pesanan->update([
-            'total_harga' => $total,
-        ]);
+        $pesanan->update(['total_harga' => $total]);
 
-        Meja::where('id_meja', $request->id_meja)
-            ->update(['status' => 'terisi']);
+        $this->refreshMejaStatus($request->id_meja);
 
         DB::commit();
 
@@ -160,28 +186,40 @@ public function store(Request $request)
         return view('pesanan.show', compact('pesanan'));
     }
 
-    public function edit($id)
-    {
-        $pesanan  = Pesanan::with('detailPesanan')->findOrFail($id);
-        $menu     = Menu::all();
-        $kategori = Kategori::all();
-        $meja     = Meja::where('status', 'kosong')
-                        ->orWhere('id_meja', $pesanan->id_meja)
-                        ->get();
+public function edit($id)
+{
+    $pesanan  = Pesanan::with('detailPesanan')->findOrFail($id);
+    $menu     = Menu::all();
+    $kategori = Kategori::all();
 
-        return view('kasir.pesanan.edit', compact('pesanan', 'menu', 'meja', 'kategori'));
-    }
+    $meja = Meja::all()->map(function ($m) use ($pesanan) {
+        $terisi = Pesanan::where('id_meja', $m->id_meja)
+            ->where('status', 'belum_bayar')
+            ->when($m->id_meja == $pesanan->id_meja, fn ($q) => $q->where('id_pesanan', '!=', $pesanan->id_pesanan))
+            ->sum('jumlah_orang');
 
-    public function update(Request $request, $id)
+        $m->terisi = $terisi;
+        $m->sisa   = max($m->kapasitas - $terisi, 0);
+
+        return $m;
+    })->filter(fn ($m) => $m->sisa > 0 || $m->id_meja == $pesanan->id_meja)->values();
+
+    return view('kasir.pesanan.edit', compact('pesanan', 'menu', 'meja', 'kategori'));
+}
+
+public function update(Request $request, $id)
 {
     $request->validate([
-        'id_meja' => 'required',
-        'menu'    => 'required|array|min:1',
-        'jumlah'  => 'required|array|min:1',
+        'id_meja'      => 'required',
+        'jumlah_orang' => 'required|integer|min:1',
+        'menu'         => 'required|array|min:1',
+        'jumlah'       => 'required|array|min:1',
     ], [
-        'id_meja.required' => 'Meja wajib dipilih.',
-        'menu.required'    => 'Pesanan tidak boleh kosong, minimal 1 menu harus dipilih.',
-        'jumlah.required'  => 'Jumlah menu wajib diisi.',
+        'id_meja.required'      => 'Meja wajib dipilih.',
+        'jumlah_orang.required' => 'Jumlah orang wajib diisi.',
+        'jumlah_orang.min'      => 'Jumlah orang minimal 1.',
+        'menu.required'         => 'Pesanan tidak boleh kosong, minimal 1 menu harus dipilih.',
+        'jumlah.required'       => 'Jumlah menu wajib diisi.',
     ]);
 
     DB::beginTransaction();
@@ -189,6 +227,23 @@ public function store(Request $request)
     try {
         $pesanan = Pesanan::findOrFail($id);
         $oldMeja = $pesanan->id_meja;
+
+        // ── Validasi sisa kursi kalau meja diganti atau jumlah orang berubah ──
+        $mejaTujuan = Meja::lockForUpdate()->findOrFail($request->id_meja);
+
+        $terisiMejaTujuan = Pesanan::where('id_meja', $request->id_meja)
+            ->where('status', 'belum_bayar')
+            ->where('id_pesanan', '!=', $pesanan->id_pesanan)
+            ->sum('jumlah_orang');
+
+        $sisaMejaTujuan = $mejaTujuan->kapasitas - $terisiMejaTujuan;
+
+        if ((int) $request->jumlah_orang > $sisaMejaTujuan) {
+            DB::rollBack();
+            return back()
+                ->withInput()
+                ->with('error', "Jumlah orang melebihi sisa kursi meja ini (sisa {$sisaMejaTujuan} kursi).");
+        }
 
         $existingDetails = DetailPesanan::where('id_pesanan', $id)->get();
         $processedIds = [];
@@ -201,7 +256,7 @@ public function store(Request $request)
             $tipeHarga = $request->tipe_harga[$key] ?? 'normal';
             $hargaPakai = (int) ($request->harga_pakai[$key] ?? $menu->harga);
             $subtotal = $hargaPakai * $jumlahBaru;
-             $catatanBaru = $request->catatan[$key] ?? null; // tambahkan
+            $catatanBaru = $request->catatan[$key] ?? null;
 
             /*
              * Penting:
@@ -220,12 +275,11 @@ public function store(Request $request)
                 $jumlahLama = (int) ($detail->jumlah ?? 0);
                 $menuLama = (int) ($detail->id_menu ?? 0);
                 $isNewLama = (int) ($detail->is_new ?? 0);
-                $catatanLama  = $detail->catatan; // tambahkan
+                $catatanLama  = $detail->catatan;
 
                 $menuBerubah = $menuLama !== (int) $id_menu;
                 $jumlahBertambah = $jumlahBaru > $jumlahLama;
-                $catatanBerubah  = $catatanLama !== $catatanBaru; // tambahkan
-
+                $catatanBerubah  = $catatanLama !== $catatanBaru;
 
                 if ($menuBerubah) {
                     /*
@@ -262,7 +316,7 @@ public function store(Request $request)
                     'subtotal'    => $subtotal,
                     'tipe_harga'  => $tipeHarga,
                     'harga_pakai' => $hargaPakai,
-                    'catatan'     => $catatanBaru, // tambahkan
+                    'catatan'     => $catatanBaru,
                     'is_new'      => $isNew,
                     'jumlah_awal' => $jumlahAwal,
                 ]);
@@ -282,7 +336,7 @@ public function store(Request $request)
                     'subtotal'    => $subtotal,
                     'tipe_harga'  => $tipeHarga,
                     'harga_pakai' => $hargaPakai,
-                     'catatan'     => $catatanBaru, // tambahkan
+                    'catatan'     => $catatanBaru,
                     'is_new'      => 1,
                     'jumlah_awal' => null,
                 ]);
@@ -300,14 +354,15 @@ public function store(Request $request)
         }
 
         $pesanan->update([
-            'id_meja'     => $request->id_meja,
-            'total_harga' => $total,
+            'id_meja'      => $request->id_meja,
+            'jumlah_orang' => $request->jumlah_orang,
+            'total_harga'  => $total,
         ]);
 
         if ($oldMeja != $request->id_meja) {
-            Meja::where('id_meja', $oldMeja)->update(['status' => 'kosong']);
-            Meja::where('id_meja', $request->id_meja)->update(['status' => 'terisi']);
+            $this->refreshMejaStatus($oldMeja);
         }
+        $this->refreshMejaStatus($request->id_meja);
 
         DB::commit();
 
@@ -378,8 +433,7 @@ public function bayar(Request $request, $id)
             'kembalian'         => $kembalian,
         ]);
 
-        Meja::where('id_meja', $pesanan->id_meja)
-            ->update(['status' => 'kosong']);
+ $this->refreshMejaStatus($pesanan->id_meja);
 
         DB::commit();
 
@@ -415,5 +469,51 @@ public function bayar(Request $request, $id)
         'detailTambahQty',
         'detailLama'
     ));
+}
+private function refreshMejaStatus($idMeja)
+{
+    $meja = Meja::lockForUpdate()->findOrFail($idMeja);
+
+    $terisi = Pesanan::where('id_meja', $idMeja)
+        ->where('status', 'belum_bayar')
+        ->sum('jumlah_orang');
+
+    $sisa = $meja->kapasitas - $terisi;
+
+    $meja->update([
+        'status' => $sisa <= 0 ? 'terisi' : 'kosong',
+    ]);
+
+    return $sisa;
+}
+public function destroy($id)
+{
+    DB::beginTransaction();
+
+    try {
+        $pesanan = Pesanan::findOrFail($id);
+
+        if ($pesanan->status === 'sudah_bayar') {
+            DB::rollBack();
+            return back()->with('error', 'Pesanan yang sudah dibayar tidak dapat dihapus.');
+        }
+
+        $idMeja = $pesanan->id_meja;
+
+        DetailPesanan::where('id_pesanan', $pesanan->id_pesanan)->delete();
+        $pesanan->delete();
+
+        $this->refreshMejaStatus($idMeja);
+
+        DB::commit();
+
+        return redirect()->route('pesanan.index')
+            ->with('success', 'Pesanan berhasil dihapus.');
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        return back()->with('error', 'Gagal menghapus pesanan: ' . $e->getMessage());
+    }
 }
 }

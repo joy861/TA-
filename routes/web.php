@@ -78,6 +78,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/laporan/cetak/{tanggal}', [LaporanController::class, 'cetak'])
         ->name('laporan.cetak');
+        Route::delete('/laporan/{id}/hapus', [LaporanController::class, 'destroy'])
+    ->name('laporan.destroy');
 
     Route::get('/laporan/menu-terlaris/cetak/{tanggal}', [LaporanController::class, 'cetakMenuTerlaris'])
         ->name('laporan.menu-terlaris.cetak');
@@ -95,6 +97,14 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/kasir/meja', [MejaController::class, 'indexKasir'])
         ->name('kasir.meja.index');
+
+
+        Route::prefix('kasir/meja')->name('kasir.meja.')->group(function () {
+    Route::get('/', [MejaController::class, 'indexKasir'])->name('index');
+    Route::post('/', [MejaController::class, 'storeKasir'])->name('store');
+    Route::put('/{id}', [MejaController::class, 'updateKasir'])->name('update');
+    Route::delete('/{id}', [MejaController::class, 'destroyKasir'])->name('destroy');
+});
 
     /*
     |--------------------------------------------------------------------------
@@ -124,6 +134,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::post('/transaksi/{id}/proses', [PesananController::class, 'bayar'])
         ->name('transaksi.proses');
+        Route::delete('/pesanan/{id}', [PesananController::class, 'destroy'])->name('pesanan.destroy');
 
     /*
     |--------------------------------------------------------------------------
