@@ -101,9 +101,6 @@ Route::middleware(['auth'])->group(function () {
 
         Route::prefix('kasir/meja')->name('kasir.meja.')->group(function () {
     Route::get('/', [MejaController::class, 'indexKasir'])->name('index');
-    Route::post('/', [MejaController::class, 'storeKasir'])->name('store');
-    Route::put('/{id}', [MejaController::class, 'updateKasir'])->name('update');
-    Route::delete('/{id}', [MejaController::class, 'destroyKasir'])->name('destroy');
 });
 
     /*
