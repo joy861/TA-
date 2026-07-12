@@ -327,7 +327,7 @@
         setTimeout(()=>{ o.classList.add('hidden'); o.classList.remove('flex'); },200);
     }
     function openEditModal(id, nomor, kapasitas, status) {
-        document.getElementById('formEdit').action=`/admin/meja/${id}`;
+        document.getElementById('formEdit').action=`/meja/${id}`;
         document.getElementById('edit_nomor').value=nomor;
         document.getElementById('edit_kapasitas').value=kapasitas;
         document.getElementById('edit_status').value=status;
